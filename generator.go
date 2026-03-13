@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -26,12 +27,12 @@ const serverTemplate = `  server:
       - %s
 `
 
-const clientTemplate = `  client1:
-    container_name: client1
+const clientTemplate = `  client%d:
+    container_name: client%d
     image: %s
     entrypoint: /client
     environment:
-      - CLI_ID=1
+      - CLI_ID=%d
       - CLI_LOG_LEVEL=%s
     networks:
       - %s
@@ -51,25 +52,30 @@ func serverContent() string {
 	return fmt.Sprintf(serverTemplate, serverContainerName, serverImage, debugLogLevel, networkName)
 }
 
-func clientContent() string {
-	return fmt.Sprintf(clientTemplate, clientImage, debugLogLevel, networkName, serverContainerName)
+func clientsContent(amountOfClients int) string {
+	var clients []string
+	for i := 1; i <= amountOfClients; i++ {
+		client := fmt.Sprintf(clientTemplate, i, i, clientImage, i, debugLogLevel, networkName, serverContainerName)
+		clients = append(clients, client)
+	}
+	return strings.Join(clients, "\n")
 }
 
 func network() string {
 	return fmt.Sprintf(networkTemplate, networkName)
 }
 
-func services() string {
+func services(amountOfClients int) string {
 	var parts []string
 	servicesHeader := "services:"
-	parts = append(parts, servicesHeader, serverContent(), clientContent())
+	parts = append(parts, servicesHeader, serverContent(), clientsContent(amountOfClients))
 	return strings.Join(parts, "\n")
 }
 
-func fileContent() string {
+func fileContent(amountOfClients int) string {
 	var parts []string
 	fileHeader := "name: tp0"
-	parts = append(parts, fileHeader, services(), network())
+	parts = append(parts, fileHeader, services(amountOfClients), network())
 	return strings.Join(parts, "\n")
 }
 
@@ -80,8 +86,14 @@ func main() {
 	}
 
 	fileName := os.Args[1]
+	amountOfClients, err := strconv.Atoi(os.Args[2])
 
-	err := os.WriteFile(fileName, []byte(fileContent()), 0644)
+	if err != nil {
+		fmt.Println("Invalid amount of clients. Please provide a valid integer.")
+		os.Exit(1)
+	}
+
+	err = os.WriteFile(fileName, []byte(fileContent(amountOfClients)), 0644)
 	if err != nil {
 		fmt.Printf("Error to write file: %v\n", err)
 		os.Exit(1)
