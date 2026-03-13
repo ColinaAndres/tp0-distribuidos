@@ -25,6 +25,8 @@ const serverTemplate = `  server:
       - LOGGING_LEVEL=%s
     networks:
       - %s
+    volumes:
+      - ./server/config.ini:/config.ini
 `
 
 const clientTemplate = `  client%d:
@@ -38,6 +40,8 @@ const clientTemplate = `  client%d:
       - %s
     depends_on:
       - %s
+    volumes:
+      - ./client/config.yaml:/config.yaml
 `
 
 const networkTemplate = `networks:
