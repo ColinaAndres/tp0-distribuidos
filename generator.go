@@ -13,7 +13,6 @@ const (
 	serverImage         = "server:latest"
 	clientImage         = "client:latest"
 	networkName         = "testing_net"
-	debugLogLevel       = "DEBUG"
 )
 
 const serverTemplate = `  server:
