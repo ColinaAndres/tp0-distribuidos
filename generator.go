@@ -22,7 +22,6 @@ const serverTemplate = `  server:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=%s
     networks:
       - %s
     volumes:
@@ -35,7 +34,6 @@ const clientTemplate = `  client%d:
     entrypoint: /client
     environment:
       - CLI_ID=%d
-      - CLI_LOG_LEVEL=%s
     networks:
       - %s
     depends_on:
@@ -53,13 +51,13 @@ const networkTemplate = `networks:
 `
 
 func serverContent() string {
-	return fmt.Sprintf(serverTemplate, serverContainerName, serverImage, debugLogLevel, networkName)
+	return fmt.Sprintf(serverTemplate, serverContainerName, serverImage, networkName)
 }
 
 func clientsContent(amountOfClients int) string {
 	var clients []string
 	for i := 1; i <= amountOfClients; i++ {
-		client := fmt.Sprintf(clientTemplate, i, i, clientImage, i, debugLogLevel, networkName, serverContainerName)
+		client := fmt.Sprintf(clientTemplate, i, i, clientImage, i, networkName, serverContainerName)
 		clients = append(clients, client)
 	}
 	return strings.Join(clients, "\n")
