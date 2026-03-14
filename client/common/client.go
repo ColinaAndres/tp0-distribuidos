@@ -3,6 +3,7 @@ package common
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"net"
 	"time"
 
@@ -38,15 +39,23 @@ func NewClient(config ClientConfig) *Client {
 // failure, error is printed in stdout/stderr and exit 1
 // is returned
 func (c *Client) createClientSocket() error {
-	conn, err := net.Dial("tcp", c.config.ServerAddress)
-	if err != nil {
-		log.Criticalf(
-			"action: connect | result: fail | client_id: %v | error: %v",
-			c.config.ID,
-			err,
-		)
+	maxAttemps := 3
+	var err error
+	for i := 0; i < maxAttemps; i++ {
+		conn, err_aux := net.Dial("tcp", c.config.ServerAddress)
+		if err_aux == nil {
+			c.conn = conn
+			return nil
+		}
+		err = err_aux
+		waitTime := time.Duration(math.Pow(2, float64(i))) * time.Second
+		time.Sleep(waitTime)
 	}
-	c.conn = conn
+	log.Criticalf(
+		"action: connect | result: fail | client_id: %v | error: %v",
+		c.config.ID,
+		err,
+	)
 	return nil
 }
 
