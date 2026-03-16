@@ -30,7 +30,7 @@ class Server:
             if self._client_sock is not None:
                 self.__handle_client_connection()
 
-        self.__gracefull_shutdown()
+        self.__graceful_shutdown()
 
     def __close_sockets(self, socket, socket_name):
         """
