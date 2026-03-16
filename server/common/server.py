@@ -32,16 +32,16 @@ class Server:
 
         self.__graceful_shutdown()
 
-    def __close_sockets(self, socket, socket_name):
+    def __close_sockets(self, skt, socket_name):
         """
         Auxiliar function to close sockets
         """
-        if socket is None:
+        if skt is None:
             return
         
         try:
-            socket.shutdown(socket.SHUT_RDWR)
-            socket.close()
+            skt.shutdown(socket.SHUT_RDWR)
+            skt.close()
             logging.info(f'action: closing_{socket_name}_socket | result: success')
         except OSError as e:
             logging.error(f'action: closing_{socket_name}_socket | result: fail | error: {e}')
