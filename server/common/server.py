@@ -32,7 +32,21 @@ class Server:
 
         self.__gracefull_shutdown()
 
-    def __gracefull_shutdown(self):
+    def __close_sockets(self, socket, socket_name):
+        """
+        Auxiliar function to close sockets
+        """
+        if socket is None:
+            return
+        
+        try:
+            socket.shutdown(socket.SHUT_RDWR)
+            socket.close()
+            logging.info(f'action: closing_{socket_name}_socket | result: success')
+        except OSError as e:
+            logging.error(f'action: closing_{socket_name}_socket | result: fail | error: {e}')
+
+    def __graceful_shutdown(self):
         """
         Gracefully shutdown the server
 
@@ -40,22 +54,8 @@ class Server:
         is shutdown and closed. If the client socket is still open, it is also shutdown and closed
 
         """
-        try:
-            self._server_socket.shutdown(socket.SHUT_RDWR)
-            self._server_socket.close()
-            logging.info('action: closing_server_socket | result: success')
-        except OSError as e:
-            logging.error(f'action: closing_server_socket | result: fail | error: {e}')
-
-        # Shutsdown client socket if it is still open, possibly necesary on future changes
-        if self._client_sock is not None:
-            try:
-                self._client_sock.shutdown(socket.SHUT_RDWR)
-                self._client_sock.close()
-                logging.info('action: closing_client_socket | result: success')
-            except OSError as e:
-                logging.error(f'action: closing_client_socket | result: fail | error: {e}')
-        return 
+        self.__close_sockets(self._server_socket, "server")
+        self.__close_sockets(self._client_sock, "client")
 
     def __handle_client_connection(self):
         """
