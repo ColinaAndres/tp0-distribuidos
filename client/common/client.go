@@ -76,6 +76,7 @@ func (c *Client) gracefulShutdown() {
 
 // StartClientLoop Send messages to the client until some time threshold is met
 func (c *Client) StartClientLoop(sigTermChannel chan os.Signal) {
+	c.running = true
 
 	// gorutine to listen for SIGTERM signal. If the signal is received
 	// running flag is set to false
