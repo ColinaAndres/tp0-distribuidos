@@ -61,6 +61,19 @@ func (c *Client) createClientSocket() error {
 	return nil
 }
 
+// GracefulShutdown Closes the client socket if it is open.
+func (c *Client) gracefulShutdown() {
+	if c.conn != nil {
+		log.Infof("action: closing_client_socket | result: in_progress | client_id: %v", c.config.ID)
+		err := c.conn.Close()
+		if err != nil {
+			log.Errorf("action: closing_client_socket | result: fail | client_id: %v | error: %v", c.config.ID, err)
+		} else {
+			log.Infof("action: closing_client_socket | result: success | client_id: %v", c.config.ID)
+		}
+	}
+}
+
 // StartClientLoop Send messages to the client until some time threshold is met
 func (c *Client) StartClientLoop(sigTermChannel chan os.Signal) {
 
@@ -105,5 +118,8 @@ func (c *Client) StartClientLoop(sigTermChannel chan os.Signal) {
 		time.Sleep(c.config.LoopPeriod)
 
 	}
+
+	c.gracefulShutdown()
+
 	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
 }
