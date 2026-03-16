@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"net"
+	"os"
 	"time"
 
 	"github.com/op/go-logging"
@@ -22,8 +23,9 @@ type ClientConfig struct {
 
 // Client Entity that encapsulates how
 type Client struct {
-	config ClientConfig
-	conn   net.Conn
+	config  ClientConfig
+	conn    net.Conn
+	running bool
 }
 
 // NewClient Initializes a new client receiving the configuration
@@ -60,10 +62,19 @@ func (c *Client) createClientSocket() error {
 }
 
 // StartClientLoop Send messages to the client until some time threshold is met
-func (c *Client) StartClientLoop() {
+func (c *Client) StartClientLoop(sigTermChannel chan os.Signal) {
+
+	// gorutine to listen for SIGTERM signal. If the signal is received
+	// running flag is set to false
+
+	go func() {
+		<-sigTermChannel
+		c.running = false
+	}()
+
 	// There is an autoincremental msgID to identify every message sent
 	// Messages if the message amount threshold has not been surpassed
-	for msgID := 1; msgID <= c.config.LoopAmount; msgID++ {
+	for msgID := 1; msgID <= c.config.LoopAmount && c.running; msgID++ {
 		// Create the connection the server in every loop iteration. Send an
 		c.createClientSocket()
 

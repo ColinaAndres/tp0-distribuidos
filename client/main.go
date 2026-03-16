@@ -116,5 +116,5 @@ func main() {
 	signal.Notify(sigTermChannel, syscall.SIGTERM)
 
 	client := common.NewClient(clientConfig)
-	client.StartClientLoop()
+	client.StartClientLoop(sigTermChannel)
 }
