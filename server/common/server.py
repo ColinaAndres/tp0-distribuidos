@@ -40,14 +40,21 @@ class Server:
         is shutdown and closed. If the client socket is still open, it is also shutdown and closed
 
         """
-        self._server_socket.shutdown(socket.SHUT_RDWR)
-        self._server_socket.close()
+        try:
+            self._server_socket.shutdown(socket.SHUT_RDWR)
+            self._server_socket.close()
+            logging.info('action: closing_server_socket | result: success')
+        except OSError as e:
+            logging.error(f'action: closing_server_socket | result: fail | error: {e}')
 
         # Shutsdown client socket if it is still open, possibly necesary on future changes
         if self._client_sock is not None:
-            self._client_sock.shutdown(socket.SHUT_RDWR)
-            self._client_sock.close()
-
+            try:
+                self._client_sock.shutdown(socket.SHUT_RDWR)
+                self._client_sock.close()
+                logging.info('action: closing_client_socket | result: success')
+            except OSError as e:
+                logging.error(f'action: closing_client_socket | result: fail | error: {e}')
         return 
 
     def __handle_client_connection(self):

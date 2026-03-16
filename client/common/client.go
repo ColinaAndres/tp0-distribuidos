@@ -79,7 +79,6 @@ func (c *Client) StartClientLoop(sigTermChannel chan os.Signal) {
 
 	// gorutine to listen for SIGTERM signal. If the signal is received
 	// running flag is set to false
-
 	go func() {
 		<-sigTermChannel
 		c.running = false
