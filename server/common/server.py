@@ -9,6 +9,10 @@ class Server:
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
+        self._timeout_time = 0.5
+        self._server_socket.settimeout(self._timeout_time)
+
+        #register signal handler for SIGTERM
         signal.signal(signal.SIGTERM, self.__handle_sigterm)
 
     def run(self):
@@ -23,7 +27,8 @@ class Server:
         self._running = True
         while self._running:
             client_sock = self.__accept_new_connection()
-            self.__handle_client_connection(client_sock)
+            if client_sock is not None:
+                self.__handle_client_connection(client_sock)
 
         self.gracefull_shutdown()
 
@@ -54,15 +59,19 @@ class Server:
         """
         Accept new connections
 
-        Function blocks until a connection to a client is made.
-        Then connection created is printed and returned
+        Function blocks until a connection to a client is made or
+        a timeout occurs. Then connection created is printed and returned
         """
 
         # Connection arrived
-        logging.info('action: accept_connections | result: in_progress')
-        c, addr = self._server_socket.accept()
-        logging.info(f'action: accept_connections | result: success | ip: {addr[0]}')
-        return c
+        try:
+            logging.info('action: accept_connections | result: in_progress')
+            c, addr = self._server_socket.accept()
+            logging.info(f'action: accept_connections | result: success | ip: {addr[0]}')
+            return c
+
+        except socket.timeout:
+            return None
 
     def __handle_sigterm(self, _signum, _frame):
         """ 
