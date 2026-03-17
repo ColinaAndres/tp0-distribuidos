@@ -9,6 +9,7 @@
   - [Condiciones de entrega](#condiciones-de-entrega)
 - [Resolución de ejercicios](#resolucion-de-ejercicios)
   - [Ejercicio 1](#ejercicio-1)
+  - [Ejercicio 2](#ejercicio-2)
 
 # TP0: Docker + Comunicaciones + Concurrencia
 
@@ -203,3 +204,7 @@ La manera de ejecutar el script es:
 ```bash
 ./generar-compose.sh <nombre_del_archivo> <cantidad_de_clientes>
 ```
+
+### Ejercicio 2
+
+Se actualiza el subscript `generator.go` para que a cada servicio del docker-compose se le agrege el campo `volumes` el cual permite inyectar como volumen los archivos de configuracion tanto del cliente como del servidor de forma independiente a la imagen de docker, evitando tener que actualizar la imagen al hacer cambios en los archivos de configuracion. Ademas se eliminan variables de entorno del campo `environment` que pisan a los archivos de configuracion (en particular las varibales sobre el nivel de Log)
