@@ -1,3 +1,15 @@
+# Índice
+
+- [ TP0: Docker + Comunicaciones + Concurrencia](#tp0-docker--comunicaciones--concurrencia)
+  - [Instrucciones de uso](#instrucciones-de-uso)
+  - [Ejemplo de ejecución](#ejemplo)
+  - Parte 1 – Docker: [Ejercicio 1](#ejercicio-n1), [Ejercicio 2](#ejercicio-n2), [Ejercicio 3](#ejercicio-n3), [Ejercicio 4](#ejercicio-n4)
+  - Parte 2 – Comunicaciones: [Ejercicio 5](#ejercicio-n5), [Ejercicio 6](#ejercicio-n6), [Ejercicio 7](#ejercicio-n7)
+  - Parte 3 – Concurrencia: [Ejercicio 8](#ejercicio-n8)
+  - [Condiciones de entrega](#condiciones-de-entrega)
+- [Resolución de ejercicios](#resolucion-de-ejercicios)
+  - [Ejercicio 1](#ejercicio-1)
+
 # TP0: Docker + Comunicaciones + Concurrencia
 
 En el presente repositorio se provee un esqueleto básico de cliente/servidor, en donde todas las dependencias del mismo se encuentran encapsuladas en containers. Los alumnos deberán resolver una guía de ejercicios incrementales, teniendo en cuenta las condiciones de entrega descritas al final de este enunciado.
@@ -179,3 +191,15 @@ Se proveen [pruebas automáticas](https://github.com/7574-sistemas-distribuidos/
 
 El incumplimiento de las pruebas es condición de desaprobación, pero su cumplimiento no es suficiente para la aprobación.  Se pide a los alumnos leer atentamente y **tener en cuenta** los criterios de corrección informados  [en el campus](https://campusgrado.fi.uba.ar/mod/page/view.php?id=73393).
 Respetar el formato y contenido las entradas de logs descritas en los ejercicios, pues son las que se chequean en cada uno de los tests.
+
+## Resolución de ejercicios
+
+### Ejercicio 1
+
+Se creó un script de Bash, `generar-compose.sh`, el cual llama a un subscript llamado `generador.go`. Este último genera la estructura base para un archivo `docker-compose.yaml`, asigna el nombre correspondiente al archivo y crea tantos servicios de cliente como se soliciten.
+
+La manera de ejecutar el script es:
+
+```bash
+./generar-compose.sh <nombre_del_archivo> <cantidad_de_clientes>
+```
