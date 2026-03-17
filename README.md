@@ -195,3 +195,11 @@ Respetar el formato y contenido las entradas de logs descritas en los ejercicios
 ## Resolución de ejercicios
 
 ### Ejercicio 1
+
+Se creó un script de Bash, `generar-compose.sh`, el cual llama a un subscript llamado `generador.go`. Este último genera la estructura base para un archivo `docker-compose.yaml`, asigna el nombre correspondiente al archivo y crea tantos servicios de cliente como se soliciten.
+
+La manera de ejecutar el script es:
+
+```bash
+./generar-compose.sh <nombre_del_archivo> <cantidad_de_clientes>
+```
