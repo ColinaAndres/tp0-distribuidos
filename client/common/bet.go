@@ -15,11 +15,11 @@ type Bet struct {
 
 func NewBetFromEnv() *Bet {
 	return &Bet{
-		agency:   os.Getenv("AGENCY"),
-		name:     os.Getenv("NAME"),
-		lastName: os.Getenv("LAST_NAME"),
-		document: os.Getenv("DOCUMENT"),
-		birth:    os.Getenv("BIRTH"),
-		number:   os.Getenv("NUMBER"),
+		agency:   os.Getenv("CLI_ID"),
+		name:     os.Getenv("NOMBRE"),
+		lastName: os.Getenv("APELLIDO"),
+		document: os.Getenv("DOCUMENTO"),
+		birth:    os.Getenv("NACIMIENTO"),
+		number:   os.Getenv("NUMERO"),
 	}
 }
