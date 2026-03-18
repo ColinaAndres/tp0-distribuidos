@@ -28,3 +28,9 @@ class BetProtocol:
         Sends a confirmation message to the client socket.
         """
         self._client_socket.send_all(b'\x01')
+
+    def close(self):
+        """
+        Closes the client socket.
+        """
+        self._client_socket.close()
