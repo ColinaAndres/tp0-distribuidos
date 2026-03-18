@@ -11,6 +11,7 @@
   - [Ejercicio 1](#ejercicio-1)
   - [Ejercicio 2](#ejercicio-2)
   - [Ejercicio 3](#ejercicio-3)
+  - [Ejercicio 4](#ejercicio-4)
 
 # TP0: Docker + Comunicaciones + Concurrencia
 
@@ -219,3 +220,13 @@ Para verificar que el servidor responde sin instalar nada en la maquina host, se
 ```bash
 SERVER_RESPONSE=$(docker run --rm --network tp0_testing_net busybox /bin/sh -c "echo '$TEST_MESSAGE' | nc server 12345")
 ```
+
+### Ejercicio 4
+
+Se realizo manejo de la signal SIGTERM para que al recibirla se pueda cerrar de forma ordenada todos los recursos tanto del lado del servidor como del lado del cliente.
+
+- Servidor: Se usa la libreria estandard `signal` para que al recibir SIGTERM se dispare el manejador asociado que en este caso es el metodo `graceful_shutdown()` de `Server` donde se pone la variable running en false (esta variable es la que se usa como condicion de corte del loop principal dentro del metodo `run()`) y se cierran tanto el socket de conexion como el socket del cliente que esta siendo atendido.
+
+- Cliente: Se usa las librerias syscall y os/signal para el manejo de SIGTERM. Contrario a el caso de python, al recibir SIGTERM no se puede disparar un handler de forma automatica cortando el flujo actual del programa, en cambio se usa una combinacion de channel mas gorutine. se crea un channel el cual se registra al sistema operativo de forma que, al detectar SIGTERM, este llene el channel registrado con el aviso, a su vez se usa una gorutine para que se mantenga esperando por esta informacion, al momento de recibir la informacion por el channel, llama al metodo `GracefulShutdown()` de `Client` el cual es analogo al metodo del server `Server`.
+
+En ambos casos se loggea el cierre de los recursos.
