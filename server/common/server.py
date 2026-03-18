@@ -1,6 +1,5 @@
 import socket
 import logging
-import signal
 
 
 class Server:
@@ -11,9 +10,6 @@ class Server:
         self._server_socket.listen(listen_backlog)
         self._timeout_time = 0.5
         self._server_socket.settimeout(self._timeout_time)
-
-        #register signal handler for SIGTERM
-        signal.signal(signal.SIGTERM, self.__handle_sigterm)
 
     def run(self):
         """
@@ -30,7 +26,19 @@ class Server:
             if self._client_sock is not None:
                 self.__handle_client_connection()
 
-        self.__graceful_shutdown()
+    def graceful_shutdown(self):
+        """
+        Gracefully shutdown the server
+
+        When the server has its _running flag set to false, the server socket 
+        is shutdown and closed. If the client socket is still open, it is also shutdown and closed
+
+        """
+        logging.info('action: graceful_shutdown | result: in_progress')
+        self._running = False
+        self.__close_sockets(self._server_socket, "server")
+        self.__close_sockets(self._client_sock, "client")
+        logging.info('action: graceful_shutdown | result: success')
 
     def __close_sockets(self, skt, socket_name):
         """
@@ -45,17 +53,6 @@ class Server:
             logging.info(f'action: closing_{socket_name}_socket | result: success')
         except OSError as e:
             logging.error(f'action: closing_{socket_name}_socket | result: fail | error: {e}')
-
-    def __graceful_shutdown(self):
-        """
-        Gracefully shutdown the server
-
-        When the server has its _running flag set to false, the server socket 
-        is shutdown and closed. If the client socket is still open, it is also shutdown and closed
-
-        """
-        self.__close_sockets(self._server_socket, "server")
-        self.__close_sockets(self._client_sock, "client")
 
     def __handle_client_connection(self):
         """
@@ -93,13 +90,4 @@ class Server:
 
         except socket.timeout:
             return None
-
-    def __handle_sigterm(self, _signum, _frame):
-        """ 
-        Handle SIGTERM signal
-
-        When SIGTERM signal is received, the server running flag is set to false
-        """
-
-        logging.info('action: receive_sigterm | result: success')
-        self._running = False
+        
