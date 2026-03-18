@@ -8,8 +8,6 @@ class Server:
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
-        self._timeout_time = 0.5
-        self._server_socket.settimeout(self._timeout_time)
 
     def run(self):
         """
@@ -88,6 +86,7 @@ class Server:
             logging.info(f'action: accept_connections | result: success | ip: {addr[0]}')
             return c
 
-        except socket.timeout:
+        except OSError as e:
+            logging.error(f'action: accept_connections | result: fail | error: {e}')
             return None
         
