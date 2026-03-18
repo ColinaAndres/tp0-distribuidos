@@ -18,7 +18,7 @@ class BetProtocol:
         agency, first_name, last_name, document, birthdate, number = data.split(',')
         return Bet(agency, first_name, last_name, document, birthdate, number)
     
-    def send_confirmation(self)
+    def send_confirmation(self):
         """
         Sends a confirmation message to the client socket.
         """
