@@ -24,7 +24,7 @@ class Server:
             if self._client_sock is not None:
                 self.__handle_client_connection()
 
-    def graceful_shutdown(self):
+    def graceful_shutdown(self, _signum, _frame):
         """
         Gracefully shutdown the server
 
