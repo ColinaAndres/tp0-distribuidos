@@ -10,6 +10,7 @@
 - [Resolución de ejercicios](#resolucion-de-ejercicios)
   - [Ejercicio 1](#ejercicio-1)
   - [Ejercicio 2](#ejercicio-2)
+  - [Ejercicio 3](#ejercicio-3)
 
 # TP0: Docker + Comunicaciones + Concurrencia
 
@@ -208,3 +209,13 @@ La manera de ejecutar el script es:
 ### Ejercicio 2
 
 Se actualiza el subscript `generator.go` para que a cada servicio del docker-compose se le agrege el campo `volumes` el cual permite inyectar como volumen los archivos de configuracion tanto del cliente como del servidor de forma independiente a la imagen de docker, evitando tener que actualizar la imagen al hacer cambios en los archivos de configuracion. Ademas se eliminan variables de entorno del campo `environment` que pisan a los archivos de configuracion (en particular las varibales sobre el nivel de Log)
+
+### Ejercicio 3
+
+Se creo el script `validar-echo-server.sh` el cual se encarga de validar si el servidor se levanto de forma correcta y responde a request.
+
+Para verificar que el servidor responde sin instalar nada en la maquina host, se levanta una imagen de docker muy liviana que contiene el comando necesario `nc` o `netcat`, la imagen se llama `busybox`. Al levantar la imagen se le indica a docker con la flag `--rm` que elimine el contenedor al terminar la operacion; por otro lado se utiliza la flag `--network` para indicarle al container que fue levantado que se conecte a esta red, de esta forma no hay que exponer ningun puerto. Finalmente dentro del contenedor se ejecuta `nc` y se almacena el valor de salida en una variable del script para posterior comparacion.
+
+```bash
+SERVER_RESPONSE=$(docker run --rm --network tp0_testing_net busybox /bin/sh -c "echo '$TEST_MESSAGE' | nc server 12345")
+```
