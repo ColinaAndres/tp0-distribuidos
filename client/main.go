@@ -114,6 +114,7 @@ func main() {
 
 	sigTermChannel := make(chan os.Signal, 1)
 	signal.Notify(sigTermChannel, syscall.SIGTERM)
+	defer signal.Stop(sigTermChannel)
 
 	client := common.NewClient(clientConfig)
 
