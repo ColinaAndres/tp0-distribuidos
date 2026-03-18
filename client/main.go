@@ -116,5 +116,13 @@ func main() {
 	signal.Notify(sigTermChannel, syscall.SIGTERM)
 
 	client := common.NewClient(clientConfig)
+
+	// gorutine to listen for SIGTERM signal. If the signal is received
+	// it calls gracefull_shutdown for the client
+	go func() {
+		<-sigTermChannel
+		client.GracefulShutdown()
+	}()
+
 	client.StartClientLoop(sigTermChannel)
 }
