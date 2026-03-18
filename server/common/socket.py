@@ -15,3 +15,8 @@ class Socket:
     
     def send_all(self, data):
         self._skt.sendall(data)
+
+    def close(self):
+        self._skt.shutdown(socket.SHUT_RDWR)
+        self._skt.close()
+        
