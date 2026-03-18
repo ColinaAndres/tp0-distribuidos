@@ -1,5 +1,7 @@
 import socket
 
+from server.common.helpers import close_socket
+
 class Socket:
     def __init__(self, socket):
         self._skt = socket
@@ -17,6 +19,5 @@ class Socket:
         self._skt.sendall(data)
 
     def close(self):
-        self._skt.shutdown(socket.SHUT_RDWR)
-        self._skt.close()
+        close_socket(self._skt, "client")
         

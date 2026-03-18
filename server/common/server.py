@@ -1,6 +1,9 @@
 import socket
 import logging
 
+from server.common.bet_protocol import BetProtocol
+from server.common.utils import store_bets
+from server.common.helpers import close_socket
 
 class Server:
     def __init__(self, port, listen_backlog):
@@ -8,7 +11,7 @@ class Server:
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
-        self._client_sock = None
+        self._actual_session_protocol = None
 
     def run(self):
         """
@@ -21,8 +24,9 @@ class Server:
 
         self._running = True
         while self._running:
-            self._client_sock = self.__accept_new_connection()
-            if self._client_sock is not None:
+            client_sock = self.__accept_new_connection()
+            if client_sock is not None:
+                self._actual_session_protocol = BetProtocol(client_sock)
                 self.__handle_client_connection()
 
     def graceful_shutdown(self, _signum, _frame):
@@ -35,23 +39,9 @@ class Server:
         """
         logging.info('action: graceful_shutdown | result: in_progress')
         self._running = False
-        self.__close_sockets(self._server_socket, "server")
-        self.__close_sockets(self._client_sock, "client")
+        close_socket(self._server_socket, "server")
+        self._actual_session_protocol.close()
         logging.info('action: graceful_shutdown | result: success')
-
-    def __close_sockets(self, skt, socket_name):
-        """
-        Auxiliar function to close sockets
-        """
-        if skt is None:
-            return
-        
-        try:
-            skt.shutdown(socket.SHUT_RDWR)
-            skt.close()
-            logging.info(f'action: closing_{socket_name}_socket | result: success')
-        except OSError as e:
-            logging.error(f'action: closing_{socket_name}_socket | result: fail | error: {e}')
 
     def __handle_client_connection(self):
         """
@@ -61,16 +51,15 @@ class Server:
         client socket will also be closed
         """
         try:
-            # TODO: Modify the receive to avoid short-reads
-            msg = self._client_sock.recv(1024).rstrip().decode('utf-8')
-            addr = self._client_sock.getpeername()
-            logging.info(f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')
-            # TODO: Modify the send to avoid short-writes
-            self._client_sock.send("{}\n".format(msg).encode('utf-8'))
-        except OSError as e:
-            logging.error("action: receive_message | result: fail | error: {e}")
+            bet = self._actual_session_protocol.receive_bet()
+            self._actual_session_protocol.send_confirmation()
+            store_bets([bet])
+            logging.info(f'action: apuesta_almacenada | result: success | dni: {bet.document} | numero: {bet.number}')
+        except (OSError, ConnectionError) as e:
+            logging.error(f"action: receive_message | result: fail | error: {e}")
         finally:
-            self._client_sock.close()
+            self._actual_session_protocol.close()
+            self._actual_session_protocol = None
 
     def __accept_new_connection(self):
         """
