@@ -9,5 +9,9 @@ class Socket:
         while len(received_data) < amount_to_receive:
             chunk = self._skt.recv(amount_to_receive - len(received_data))
             if not chunk:
-                break
+                raise ConnectionError("Socket connection closed before receiving all data")    
             received_data += chunk
+        return received_data
+    
+    def send_all(self, data):
+        self._skt.sendall(data)
