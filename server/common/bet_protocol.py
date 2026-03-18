@@ -1,25 +1,30 @@
 
+from server.common.socket import Socket
 from server.common.utils import Bet
 
-
+LENGTH_PREFIX_SIZE = 2
+DIVIDER = ','
+BYTE_ORDER = 'big'
 class BetProtocol:
     """
     Protocol to manage serialization, deserialization sending and reception of bets.
     """
 
     def __init__(self, client_socket):
-        self._client_socket = client_socket
+        self._client_socket = Socket(client_socket)
 
     def receive_bet(self) -> Bet:
         """
         Receives a bet from the client socket and deserializes it.
         """
-        data = self._client_socket.recv(1024).decode('utf-8')
-        agency, first_name, last_name, document, birthdate, number = data.split(',')
+        length_prefix_bytes = self._client_socket.receive_all(LENGTH_PREFIX_SIZE)
+        message_length = int.from_bytes(length_prefix_bytes, byteorder=BYTE_ORDER)
+        data = self._client_socket.receive_all(message_length).decode('utf-8')
+        agency, first_name, last_name, document, birthdate, number = data.split(DIVIDER)
         return Bet(agency, first_name, last_name, document, birthdate, number)
     
     def send_confirmation(self):
         """
         Sends a confirmation message to the client socket.
         """
-        self._client_socket.sendall(b'\x01')
+        self._client_socket.send_all(b'\x01')
