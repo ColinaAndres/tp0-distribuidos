@@ -4,6 +4,7 @@ import (
 	"os"
 )
 
+// Bet represents a bet placed by a client
 type Bet struct {
 	agency   string
 	name     string
@@ -13,6 +14,8 @@ type Bet struct {
 	number   string
 }
 
+// NewBetFromEnv creates a new Bet instance by reading
+// the necessary fields from environment variables.
 func NewBetFromEnv() *Bet {
 	return &Bet{
 		agency:   os.Getenv("CLI_ID"),
