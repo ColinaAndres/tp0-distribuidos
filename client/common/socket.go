@@ -20,11 +20,24 @@ func NewSocket(serverAddress string) (*Socket, error) {
 func (s *Socket) SendAll(data []byte) error {
 	totalSent := 0
 	for totalSent < len(data) {
-		n, err := s.conn.Write(data[totalSent:])
+		sended, err := s.conn.Write(data[totalSent:])
 		if err != nil {
 			return err
 		}
-		totalSent += n
+		totalSent += sended
 	}
 	return nil
+}
+
+func (s *Socket) ReceiveAll(amountToReceive int) ([]byte, error) {
+	buffer := make([]byte, amountToReceive)
+	total_received := 0
+	for total_received < amountToReceive {
+		received, err := s.conn.Read(buffer[total_received:])
+		if err != nil {
+			return nil, err
+		}
+		total_received += received
+	}
+	return buffer, nil
 }
