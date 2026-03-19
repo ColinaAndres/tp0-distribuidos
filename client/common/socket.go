@@ -41,3 +41,7 @@ func (s *Socket) ReceiveAll(amountToReceive int) ([]byte, error) {
 	}
 	return buffer, nil
 }
+
+func (s *Socket) Close() error {
+	return s.conn.Close()
+}
