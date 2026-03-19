@@ -15,12 +15,6 @@ const (
 	networkName         = "testing_network"
 )
 
-var names = []string{"Angelo", "Fyssi", "Rebeca", "Abraham", "Adrian"}
-var last_names = []string{"Gomez", "Perez", "Garcia", "Rodriguez", "Lopez"}
-var documents = []string{"12345678", "87654321", "11223344", "44332211", "56789012"}
-var births = []string{"1990-01-01", "1985-05-15", "1992-09-30", "1988-12-20", "1995-07-10"}
-var numbers = []string{"5555", "1032", "1554", "7090", "2518"}
-
 const serverTemplate = `  server:
     container_name: %s
     image: %s
@@ -39,17 +33,13 @@ const clientTemplate = `  client%d:
     entrypoint: /client
     environment:
       - CLI_ID=%d
-      - NOMBRE=%s
-      - APELLIDO=%s
-      - DOCUMENTO=%s
-      - NACIMIENTO=%s
-      - NUMERO=%s 
     networks:
       - %s
     depends_on:
       - %s
     volumes:
       - ./client/config.yaml:/config.yaml
+      - ./.data/agency-%d.csv:/agency.csv
 `
 
 const networkTemplate = `networks:
@@ -73,13 +63,9 @@ func clientsContent(amountOfClients int) string {
 			i,
 			clientImage,
 			i,
-			names[i-1],
-			last_names[i-1],
-			documents[i-1],
-			births[i-1],
-			numbers[i-1],
 			networkName,
-			serverContainerName)
+			serverContainerName,
+			i)
 		clients = append(clients, client)
 	}
 	return strings.Join(clients, "\n")
