@@ -3,6 +3,7 @@ package common
 import (
 	"encoding/binary"
 	"fmt"
+	"math"
 	"strings"
 )
 
@@ -33,12 +34,9 @@ func NewBetProtocol(serverAddress string) (*BetProtocol, error) {
 // SendBet sends a Bet instance to the server using the BetProtocol's Socket connection.
 // It returns an error if any issue occurs during the sending process.
 func (betProtocol *BetProtocol) SendBet(bet *Bet) error {
-	// TODO: modularizar esta funcion
-	serializedBet := []byte(strings.Join([]string{bet.agency, bet.name, bet.lastName, bet.document, bet.birth, bet.number}, divider))
-	length_prefix := make([]byte, lengthPrefixSize)
-	binary.BigEndian.PutUint16(length_prefix, uint16(len(serializedBet)))
-	message := append(length_prefix, serializedBet...)
-
+	serializedBet := serializeBet(bet)
+	lengthPrefix := serializeLengthPrefix(serializedBet)
+	message := append(lengthPrefix, serializedBet...)
 	return betProtocol.skt.SendAll(message)
 }
 
@@ -57,4 +55,21 @@ func (betProtocol *BetProtocol) ReceiveConfirmation() error {
 // Close closes the Socket connection used by the BetProtocol.
 func (betProtocol *BetProtocol) Close() error {
 	return betProtocol.skt.Close()
+}
+
+// Aux function to serialize a Bet struct into a byte slice using CSV format.
+func serializeBet(bet *Bet) []byte {
+	csvBet := strings.Join([]string{bet.agency, bet.name, bet.lastName, bet.document, bet.birth, bet.number}, divider)
+	return []byte(csvBet)
+}
+
+// Aux function to serialize the length of the data as a 2-byte big-endian prefix.
+func serializeLengthPrefix(data []byte) []byte {
+	length := len(data)
+	if length > math.MaxUint16 {
+		panic("data length exceeds maximum allowed size")
+	}
+	prefix := make([]byte, lengthPrefixSize)
+	binary.BigEndian.PutUint16(prefix, uint16(length))
+	return prefix
 }
