@@ -2,6 +2,15 @@ package common
 
 import (
 	"os"
+	"strings"
+)
+
+const (
+	name = iota
+	lastName
+	document
+	birth
+	number
 )
 
 // Bet represents a bet placed by a client
@@ -12,6 +21,20 @@ type Bet struct {
 	document string
 	birth    string
 	number   string
+}
+
+// NewBetFromLine creates a new Bet instance by parsing a line of text
+// The line is expected to be in the format: "name,lastName,document,birth,number"
+func NewBetFromLine(agency string, line string) *Bet {
+	betFields := strings.Split(line, ",")
+	return &Bet{
+		agency:   agency,
+		name:     betFields[name],
+		lastName: betFields[lastName],
+		document: betFields[document],
+		birth:    betFields[birth],
+		number:   betFields[number],
+	}
 }
 
 // NewBetFromEnv creates a new Bet instance by reading
