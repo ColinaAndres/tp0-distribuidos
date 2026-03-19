@@ -1,6 +1,6 @@
 
-from server.common.socket import Socket
-from server.common.utils import Bet
+from common.socket import Socket
+from common.utils import Bet
 
 LENGTH_PREFIX_SIZE = 2
 DIVIDER = ','

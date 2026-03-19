@@ -1,4 +1,5 @@
 import logging
+import socket
 
 def close_socket(skt, socket_name):
         """

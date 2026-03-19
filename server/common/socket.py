@@ -1,6 +1,4 @@
-import socket
-
-from server.common.helpers import close_socket
+from common.helpers import close_socket
 
 class Socket:
     def __init__(self, socket):
