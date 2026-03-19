@@ -1,6 +1,8 @@
 package common
 
 import (
+	"bufio"
+	"os"
 	"time"
 
 	"github.com/op/go-logging"
@@ -10,10 +12,12 @@ var log = logging.MustGetLogger("log")
 
 // ClientConfig Configuration used by the client
 type ClientConfig struct {
-	ID            string
-	ServerAddress string
-	LoopAmount    int
-	LoopPeriod    time.Duration
+	ID             string
+	ServerAddress  string
+	LoopAmount     int
+	LoopPeriod     time.Duration
+	MaxBatchAmount int
+	DataRoute      string
 }
 
 // Client Entity that encapsulates how
@@ -49,7 +53,6 @@ func (c *Client) GracefulShutdown() {
 // StartClientLoop Send messages to the client until some time threshold is met
 func (c *Client) StartClient() {
 	c.running = true
-	bet := NewBetFromEnv()
 	betProtocol, err := NewBetProtocol(c.config.ServerAddress)
 	if err != nil {
 		log.Criticalf(
@@ -61,6 +64,17 @@ func (c *Client) StartClient() {
 	c.betProtocol = betProtocol
 	defer c.GracefulShutdown()
 
+	file, err := os.Open(c.config.DataRoute)
+	if err != nil {
+		log.Criticalf(
+			"action: connect | result: fail | client_id: %v | error: %v",
+			c.config.ID,
+			err)
+		return
+	}
+	defer file.Close()
+
+	reader := bufio.NewScanner(file)
 	if err := c.betProtocol.SendBet(bet); err != nil {
 		log.Errorf(
 			"action: send_bet | result: fail | client_id: %v | error: %v",

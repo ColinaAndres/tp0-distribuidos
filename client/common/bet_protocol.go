@@ -8,7 +8,8 @@ import (
 )
 
 const (
-	divider          = ","
+	batchDivider     = "|"
+	betDivider       = ","
 	confirmation     = 1
 	lengthPrefixSize = 2
 	confirmationSize = 1
@@ -35,9 +36,7 @@ func NewBetProtocol(serverAddress string) (*BetProtocol, error) {
 // It returns an error if any issue occurs during the sending process.
 func (betProtocol *BetProtocol) SendBet(bet *Bet) error {
 	serializedBet := serializeBet(bet)
-	lengthPrefix := serializeLengthPrefix(serializedBet)
-	message := append(lengthPrefix, serializedBet...)
-	return betProtocol.skt.SendAll(message)
+	return betProtocol.skt.SendAll(serializedBet)
 }
 
 // ReceiveConfirmation waits for a confirmation byte from the server after sending a bet.
@@ -52,6 +51,14 @@ func (betProtocol *BetProtocol) ReceiveConfirmation() error {
 	return nil
 }
 
+// LookAheadBatchSize calculates the size of a batch of bets if a new bet is added to it.
+func (betProtocol *BetProtocol) LookAheadBatchSize(currentSize int, bet *Bet) int {
+	if currentSize == 0 {
+		return lengthPrefixSize + len(serializeBet(bet))
+	}
+	return currentSize + len(batchDivider) + len(serializeBetPayload(bet))
+}
+
 // Close closes the Socket connection used by the BetProtocol.
 func (betProtocol *BetProtocol) Close() error {
 	return betProtocol.skt.Close()
@@ -59,7 +66,13 @@ func (betProtocol *BetProtocol) Close() error {
 
 // Aux function to serialize a Bet struct into a byte slice using CSV format.
 func serializeBet(bet *Bet) []byte {
-	csvBet := strings.Join([]string{bet.agency, bet.name, bet.lastName, bet.document, bet.birth, bet.number}, divider)
+	serializedBet := serializeBetPayload(bet)
+	return append(serializeLengthPrefix(serializedBet), serializedBet...)
+}
+
+// Aux function to serialize a Bet struct into a byte slice using CSV format.
+func serializeBetPayload(bet *Bet) []byte {
+	csvBet := strings.Join([]string{bet.agency, bet.name, bet.lastName, bet.document, bet.birth, bet.number}, betDivider)
 	return []byte(csvBet)
 }
 
