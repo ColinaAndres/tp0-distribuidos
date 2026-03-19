@@ -235,7 +235,7 @@ En ambos casos se loggea el cierre de los recursos.
 
 Para la resolución del ejercicio se desarrolló y se optó por un protocolo simple del tipo largo de prefijo:
 
-Formato del Mensaje: Cada mensaje enviado por el Cliente es de la pinta: `[HEADER][PAYLOAD]`, donde Header consiste en 2 bytes en big endian que representan el largo del payload; y Payload consiste en un string serializado con un formato CSV con la información de la apuesta a realizar (`<AGENCIA>,<NOMBRE>,<APELLIDO>,<DOCUMENTO>,<NACIMIENTO>,<NUMERO>`). *Nota: al ser de 2 bytes el Header, el payload no puede ser de un largo mayor a 65535 bytes.*
+Formato del Mensaje: Cada mensaje enviado por el Cliente es de la pinta: `[HEADER][PAYLOAD]`, donde Header consiste en 2 bytes sin signo en big endian que representan el largo del payload; y Payload consiste en un string serializado con un formato CSV con la información de la apuesta a realizar (`<AGENCIA>,<NOMBRE>,<APELLIDO>,<DOCUMENTO>,<NACIMIENTO>,<NUMERO>`). *Nota: al ser de 2 bytes el Header, el payload no puede ser de un largo mayor a 65535 bytes.*
 
 El servidor se encarga de recibir primero los 2 bytes para saber cuántos bytes leer a continuación y poder recibir el mensaje en su totalidad.
 
