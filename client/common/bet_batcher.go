@@ -16,7 +16,7 @@ type BetBatcher struct {
 	pendingBet      *Bet
 }
 
-type BatchSizer func(currentCount int, bet Bet) int
+type BatchSizer func(currentCount int, bet *Bet) int
 
 func NewBetBatcher(agency string, reader *bufio.Scanner, betSizer BatchSizer, maxBatchAmount int) *BetBatcher {
 	return &BetBatcher{
@@ -34,7 +34,7 @@ func (betBatcher *BetBatcher) GetBatch() []Bet {
 	for len(betBatcher.actualBatch) < betBatcher.maxBatchAmount && betBatcher.reader.Scan() {
 		line := betBatcher.reader.Text()
 		bet := NewBetFromLine(betBatcher.agency, line)
-		batchSize := betBatcher.batchSizer(betBatcher.actualBatchSize, *bet)
+		batchSize := betBatcher.batchSizer(betBatcher.actualBatchSize, bet)
 		if batchSize > maxBatchSize {
 			betBatcher.pendingBet = bet
 			break
@@ -52,7 +52,7 @@ func (betBatcher *BetBatcher) restart() {
 	betBatcher.actualBatchSize = 0
 	if betBatcher.pendingBet != nil {
 		betBatcher.actualBatch = append(betBatcher.actualBatch, *betBatcher.pendingBet)
-		betBatcher.actualBatchSize = betBatcher.batchSizer(betBatcher.actualBatchSize, *betBatcher.pendingBet)
+		betBatcher.actualBatchSize = betBatcher.batchSizer(betBatcher.actualBatchSize, betBatcher.pendingBet)
 		betBatcher.pendingBet = nil
 	}
 }

@@ -75,27 +75,31 @@ func (c *Client) StartClient() {
 	defer file.Close()
 
 	reader := bufio.NewScanner(file)
-	if err := c.betProtocol.SendBet(bet); err != nil {
-		log.Errorf(
-			"action: send_bet | result: fail | client_id: %v | error: %v",
-			c.config.ID,
-			err,
-		)
-		return
-	}
+	betBatcher := NewBetBatcher(c.config.ID, reader, c.betProtocol.LookAheadBatchSize, c.config.MaxBatchAmount)
 
-	if err := c.betProtocol.ReceiveConfirmation(); err != nil {
-		log.Errorf(
-			"action: receive_confirmation | result: fail | client_id: %v | error: %v",
-			c.config.ID,
-			err,
-		)
-		return
-	}
+	for betsToSend := betBatcher.GetBatch(); betsToSend != nil; betsToSend = betBatcher.GetBatch() {
+		if err := c.betProtocol.SendBatch(betsToSend); err != nil {
+			log.Errorf(
+				"action: send_bet | result: fail | client_id: %v | error: %v",
+				c.config.ID,
+				err,
+			)
+			return
+		}
 
-	log.Infof(
-		"action: apuesta_enviada | result: success | dni: %v | numero: %v",
-		bet.document,
-		bet.number,
-	)
+		if err := c.betProtocol.ReceiveConfirmation(); err != nil {
+			log.Errorf(
+				"action: receive_confirmation | result: fail | client_id: %v | error: %v",
+				c.config.ID,
+				err,
+			)
+			return
+		}
+
+		log.Infof(
+			"action: batch_sending | result: success | client_id: %v | bets_sent: %v ",
+			len(betsToSend),
+			c.config.ID,
+		)
+	}
 }

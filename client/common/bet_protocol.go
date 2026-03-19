@@ -39,6 +39,21 @@ func (betProtocol *BetProtocol) SendBet(bet *Bet) error {
 	return betProtocol.skt.SendAll(serializedBet)
 }
 
+// SendBatch sends a batch of Bet. It first serializes the batch
+// into a byte slice, including a length prefix and batch dividers, and then sends it
+// It returns an error if any issue occurs during the sending process.
+func (betProtocol *BetProtocol) SendBatch(bets []Bet) error {
+	var serializedBatch []byte
+	for i, bet := range bets {
+		if i > 0 {
+			serializedBatch = append(serializedBatch, []byte(batchDivider)...)
+		}
+		serializedBatch = append(serializedBatch, serializeBetPayload(&bet)...)
+	}
+	serializedBatch = append(serializeLengthPrefix(serializedBatch), serializedBatch...)
+	return betProtocol.skt.SendAll(serializedBatch)
+}
+
 // ReceiveConfirmation waits for a confirmation byte from the server after sending a bet.
 // It returns an error if the confirmation is not received or if any error occurs during receiving.
 func (betProtocol *BetProtocol) ReceiveConfirmation() error {
@@ -54,7 +69,7 @@ func (betProtocol *BetProtocol) ReceiveConfirmation() error {
 // LookAheadBatchSize calculates the size of a batch of bets if a new bet is added to it.
 func (betProtocol *BetProtocol) LookAheadBatchSize(currentSize int, bet *Bet) int {
 	if currentSize == 0 {
-		return lengthPrefixSize + len(serializeBet(bet))
+		return lengthPrefixSize + len(serializeBetPayload(bet))
 	}
 	return currentSize + len(batchDivider) + len(serializeBetPayload(bet))
 }
