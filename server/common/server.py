@@ -1,9 +1,9 @@
 import socket
 import logging
 
-from server.common.bet_protocol import BetProtocol
-from server.common.utils import store_bets
-from server.common.helpers import close_socket
+from common.bet_protocol import BetProtocol
+from common.utils import store_bets
+from common.helpers import close_socket
 
 class Server:
     def __init__(self, port, listen_backlog):
