@@ -125,5 +125,5 @@ func main() {
 		client.GracefulShutdown()
 	}()
 
-	client.StartClientLoop(sigTermChannel)
+	client.StartClient()
 }

@@ -1,11 +1,6 @@
 package common
 
 import (
-	"bufio"
-	"fmt"
-	"math"
-	"net"
-	"os"
 	"time"
 
 	"github.com/op/go-logging"
@@ -23,9 +18,9 @@ type ClientConfig struct {
 
 // Client Entity that encapsulates how
 type Client struct {
-	config  ClientConfig
-	conn    net.Conn
-	running bool
+	config      ClientConfig
+	betProtocol *BetProtocol
+	running     bool
 }
 
 // NewClient Initializes a new client receiving the configuration
@@ -37,36 +32,12 @@ func NewClient(config ClientConfig) *Client {
 	return client
 }
 
-// CreateClientSocket Initializes client socket. In case of
-// failure, error is printed in stdout/stderr and exit 1
-// is returned
-func (c *Client) createClientSocket() error {
-	maxAttemps := 3
-	var err error
-	for i := 0; i < maxAttemps; i++ {
-		conn, err_aux := net.Dial("tcp", c.config.ServerAddress)
-		if err_aux == nil {
-			c.conn = conn
-			return nil
-		}
-		err = err_aux
-		waitTime := time.Duration(math.Pow(2, float64(i))) * time.Second
-		time.Sleep(waitTime)
-	}
-	log.Criticalf(
-		"action: connect | result: fail | client_id: %v | error: %v",
-		c.config.ID,
-		err,
-	)
-	return nil
-}
-
 // GracefulShutdown Closes the client socket if it is open.
 func (c *Client) GracefulShutdown() {
 	c.running = false
-	if c.conn != nil {
+	if c.betProtocol != nil {
 		log.Infof("action: closing_client_socket | result: in_progress | client_id: %v", c.config.ID)
-		err := c.conn.Close()
+		err := c.betProtocol.Close()
 		if err != nil {
 			log.Errorf("action: closing_client_socket | result: fail | client_id: %v | error: %v", c.config.ID, err)
 		} else {
@@ -76,42 +47,41 @@ func (c *Client) GracefulShutdown() {
 }
 
 // StartClientLoop Send messages to the client until some time threshold is met
-func (c *Client) StartClientLoop(sigTermChannel chan os.Signal) {
+func (c *Client) StartClient() {
 	c.running = true
-
-	// There is an autoincremental msgID to identify every message sent
-	// Messages if the message amount threshold has not been surpassed
-	for msgID := 1; msgID <= c.config.LoopAmount && c.running; msgID++ {
-		// Create the connection the server in every loop iteration. Send an
-		c.createClientSocket()
-
-		// TODO: Modify the send to avoid short-write
-		fmt.Fprintf(
-			c.conn,
-			"[CLIENT %v] Message N°%v\n",
+	bet := NewBetFromEnv()
+	betProtocol, err := NewBetProtocol(c.config.ServerAddress)
+	if err != nil {
+		log.Criticalf(
+			"action: connect | result: fail | client_id: %v | error: %v",
 			c.config.ID,
-			msgID,
-		)
-		msg, err := bufio.NewReader(c.conn).ReadString('\n')
-		c.conn.Close()
+			err)
+		return
+	}
+	c.betProtocol = betProtocol
+	defer c.GracefulShutdown()
 
-		if err != nil {
-			log.Errorf("action: receive_message | result: fail | client_id: %v | error: %v",
-				c.config.ID,
-				err,
-			)
-			return
-		}
-
-		log.Infof("action: receive_message | result: success | client_id: %v | msg: %v",
+	if err := c.betProtocol.SendBet(bet); err != nil {
+		log.Errorf(
+			"action: send_bet | result: fail | client_id: %v | error: %v",
 			c.config.ID,
-			msg,
+			err,
 		)
-
-		// Wait a time between sending one message and the next one
-		time.Sleep(c.config.LoopPeriod)
-
+		return
 	}
 
-	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
+	if err := c.betProtocol.ReceiveConfirmation(); err != nil {
+		log.Errorf(
+			"action: receive_confirmation | result: fail | client_id: %v | error: %v",
+			c.config.ID,
+			err,
+		)
+		return
+	}
+
+	log.Infof(
+		"action: apuesta_enviada | result: success | dni: %v | numero: %v",
+		bet.document,
+		bet.number,
+	)
 }
