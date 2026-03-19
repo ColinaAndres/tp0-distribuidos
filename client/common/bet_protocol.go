@@ -51,3 +51,8 @@ func (betProtocol *BetProtocol) ReceiveConfirmation() error {
 	}
 	return nil
 }
+
+// Close closes the Socket connection used by the BetProtocol.
+func (betProtocol *BetProtocol) Close() error {
+	return betProtocol.skt.Close()
+}
