@@ -1,6 +1,10 @@
 package common
 
-import "net"
+import (
+	"math"
+	"net"
+	"time"
+)
 
 // Socket is a wrapper around net.Conn that provides methods for sending and receiving data,
 // ensuring that all data is sent or received as needed.
@@ -11,14 +15,20 @@ type Socket struct {
 // NewSocket creates a new Socket instance by connecting to the specified server address.
 // It returns a pointer to the Socket and any error encountered during the connection process.
 func NewSocket(serverAddress string) (*Socket, error) {
-	conn, err := net.Dial("tcp", serverAddress)
-	if err != nil {
-		return nil, err
+	maxAttemps := 3
+	var err error
+	for i := 0; i < maxAttemps; i++ {
+		conn, err_aux := net.Dial("tcp", serverAddress)
+		if err_aux == nil {
+			return &Socket{conn}, nil
+		}
+		err = err_aux
+
+		// Exponential backoff strategy for reconnection attempts
+		waitTime := time.Duration(math.Pow(2, float64(i))) * time.Second
+		time.Sleep(waitTime)
 	}
-	v := &Socket{conn}
-
-	return v, nil
-
+	return nil, err
 }
 
 // SendAll sends the entire byte slice data to the connected server.
