@@ -230,3 +230,19 @@ Se realizo manejo de la signal SIGTERM para que al recibirla se pueda cerrar de 
 - Cliente: Se usa las librerias syscall y os/signal para el manejo de SIGTERM. Contrario a el caso de python, al recibir SIGTERM no se puede disparar un handler de forma automatica cortando el flujo actual del programa, en cambio se usa una combinacion de channel mas gorutine. se crea un channel el cual se registra al sistema operativo de forma que, al detectar SIGTERM, este llene el channel registrado con el aviso, a su vez se usa una gorutine para que se mantenga esperando por esta informacion, al momento de recibir la informacion por el channel, llama al metodo `GracefulShutdown()` de `Client` el cual es analogo al metodo del server `Server`.
 
 En ambos casos se loggea el cierre de los recursos.
+
+### Ejercicio 5
+
+Para la resolución del ejercicio se desarrolló y se optó por un protocolo simple del tipo largo de prefijo:
+
+Formato del Mensaje: Cada mensaje enviado por el Cliente es de la pinta: `[HEADER][PAYLOAD]`, donde Header consiste en 2 bytes en big endian que representan el largo del payload; y Payload consiste en un string serializado con un formato CSV con la información de la apuesta a realizar (`<AGENCIA>,<NOMBRE>,<APELLIDO>,<DOCUMENTO>,<NACIMIENTO>,<NUMERO>`). *Nota: al ser de 2 bytes el Header, el payload no puede ser de un largo mayor a 65535 bytes.*
+
+El servidor se encarga de recibir primero los 2 bytes para saber cuántos bytes leer a continuación y poder recibir el mensaje en su totalidad.
+
+Al terminar de recibir el mensaje, el servidor envía una respuesta de confirmación que consiste en un byte con el número 1. Una vez que el cliente recibe la confirmación, loggea el mensaje de confirmación.
+
+Para evitar short reads/writes y mezclar las capas de comunicación, negocio y transporte, se crearon tanto en el cliente como en el servidor las siguientes clases:
+
+La clase `Socket`, la cual se encarga de asegurar el envío y recepción completa de bytes (*Nota: la librería estándar de Python provee en su objeto Socket nativo la función para asegurar el envío de bytes completo*). Para evitar los short reads/writes se emplea un loop donde se va escribiendo o leyendo bytes de forma gradual hasta asegurar que se envió la totalidad.
+
+La clase `BetProtocol`, la cual se encarga de serializar y armar los mensajes a enviar a través del socket y a su vez deserializar y armar los objetos apuestas al recibir los bytes dados por la clase Socket.
