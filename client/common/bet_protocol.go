@@ -7,8 +7,10 @@ import (
 )
 
 const (
-	divider      = ","
-	confirmation = 1
+	divider          = ","
+	confirmation     = 1
+	lengthPrefixSize = 2
+	confirmationSize = 1
 )
 
 // BetProtocol is a struct that encapsulates the logic for sending bets
@@ -33,7 +35,7 @@ func NewBetProtocol(serverAddress string) (*BetProtocol, error) {
 func (betProtocol *BetProtocol) SendBet(bet *Bet) error {
 	// TODO: modularizar esta funcion
 	serializedBet := []byte(strings.Join([]string{bet.agency, bet.name, bet.lastName, bet.document, bet.birth, bet.number}, divider))
-	length_prefix := make([]byte, 2)
+	length_prefix := make([]byte, lengthPrefixSize)
 	binary.BigEndian.PutUint16(length_prefix, uint16(len(serializedBet)))
 	message := append(length_prefix, serializedBet...)
 
@@ -43,7 +45,7 @@ func (betProtocol *BetProtocol) SendBet(bet *Bet) error {
 // ReceiveConfirmation waits for a confirmation byte from the server after sending a bet.
 // It returns an error if the confirmation is not received or if any error occurs during receiving.
 func (betProtocol *BetProtocol) ReceiveConfirmation() error {
-	buff, err := betProtocol.skt.ReceiveAll(1)
+	buff, err := betProtocol.skt.ReceiveAll(confirmationSize)
 	if err != nil {
 		return err
 	} else if buff[0] != confirmation {
