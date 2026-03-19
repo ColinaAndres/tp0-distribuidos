@@ -66,7 +66,7 @@ class Server:
         Accept new connections
 
         Function blocks until a connection to a client is made or
-        a timeout occurs. Then connection created is printed and returned
+        a an exception occurs. Then connection created is printed and returned
         """
 
         # Connection arrived
