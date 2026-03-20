@@ -6,6 +6,16 @@ LENGTH_PREFIX_SIZE = 2
 BET_DIVIDER = ','
 BATCH_DIVIDER = '|'
 BYTE_ORDER = 'big'
+AMOUNT_OF_BET_ATRIBUTES = 6
+
+class BatchProcessingError(Exception):
+    """
+    Custom exception for errors during batch processing of bets.
+    """
+    def __init__(self, message, batch_count):
+        super().__init__(message)
+        self.batch_count = batch_count
+
 class BetProtocol:
     """
     Protocol to manage serialization, deserialization sending and reception of bets.
@@ -55,12 +65,19 @@ class BetProtocol:
         """
         Deserializes a batch of bet data into a list of Bet objects.
         """
-        stringed_bets = batch_data.split(BATCH_DIVIDER)
-        return list(map(self.__deserialize_bet, stringed_bets))
-    
+        try:
+            stringed_bets = batch_data.split(BATCH_DIVIDER)
+            return list(map(self.__deserialize_bet, stringed_bets))
+        except ValueError as e:
+            raise BatchProcessingError(f'Error deserializing bets: {e}', batch_count=len(stringed_bets))
+
     def __deserialize_bet(self, bet_data) -> Bet :
         """
         Deserializes a single bet data string into a Bet object.
+        Raise Value error if a bet is not completed
         """
-        agency, first_name, last_name, document, birthdate, number = bet_data.split(BET_DIVIDER)
+        bet_atributes = bet_data.split(BET_DIVIDER)
+        if len(bet_atributes != AMOUNT_OF_BET_ATRIBUTES):
+            raise ValueError(f'invalid bet information: {bet_atributes}')
+        agency, first_name, last_name, document, birthdate, number = bet_data
         return Bet(agency, first_name, last_name, document, birthdate, number)
