@@ -42,7 +42,7 @@ func (betBatcher *BetBatcher) GetBatch() []Bet {
 		betBatcher.actualBatch = append(betBatcher.actualBatch, *bet)
 		betBatcher.actualBatchSize = batchSize
 	}
-	result := betBatcher.actualBatch
+	result := append([]Bet(nil), betBatcher.actualBatch...)
 	betBatcher.restart()
 	return result
 }

@@ -17,6 +17,7 @@ services:
     entrypoint: /client
     environment:
       - CLI_ID=1
+      - CLI_DATA_ROUTE=/agency.csv
     networks:
       - testing_network
     depends_on:
@@ -24,34 +25,6 @@ services:
     volumes:
       - ./client/config.yaml:/config.yaml
       - ./.data/agency-1.csv:/agency.csv
-
-  client2:
-    container_name: client2
-    image: client:latest
-    entrypoint: /client
-    environment:
-      - CLI_ID=2
-    networks:
-      - testing_network
-    depends_on:
-      - server
-    volumes:
-      - ./client/config.yaml:/config.yaml
-      - ./.data/agency-2.csv:/agency.csv
-
-  client3:
-    container_name: client3
-    image: client:latest
-    entrypoint: /client
-    environment:
-      - CLI_ID=3
-    networks:
-      - testing_network
-    depends_on:
-      - server
-    volumes:
-      - ./client/config.yaml:/config.yaml
-      - ./.data/agency-3.csv:/agency.csv
 
 networks:
   testing_network:
