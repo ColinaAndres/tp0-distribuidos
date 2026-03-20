@@ -53,53 +53,101 @@ func (c *Client) GracefulShutdown() {
 // StartClientLoop Send messages to the client until some time threshold is met
 func (c *Client) StartClient() {
 	c.running = true
+
+	if !c.initializeProtocol() {
+		return
+	}
+	defer c.GracefulShutdown()
+
+	file, ok := c.openDataFile()
+	if !ok {
+		return
+	}
+	defer file.Close()
+
+	c.processBatches(file)
+}
+
+// initializeProtocol Initializes the protocol used to send bets to the server
+func (c *Client) initializeProtocol() bool {
 	betProtocol, err := NewBetProtocol(c.config.ServerAddress)
 	if err != nil {
 		log.Criticalf(
 			"action: connect | result: fail | client_id: %v | error: %v",
 			c.config.ID,
-			err)
-		return
+			err,
+		)
+		return false
 	}
-	c.betProtocol = betProtocol
-	defer c.GracefulShutdown()
 
+	c.betProtocol = betProtocol
+	return true
+}
+
+// openDataFile Opens the file that contains the bets to be sent to the server
+func (c *Client) openDataFile() (*os.File, bool) {
 	file, err := os.Open(c.config.DataRoute)
 	if err != nil {
 		log.Criticalf(
 			"action: connect | result: fail | client_id: %v | error: %v",
 			c.config.ID,
-			err)
-		return
+			err,
+		)
+		return nil, false
 	}
-	defer file.Close()
 
+	return file, true
+}
+
+// processBatches Reads the bets from the file and sends them to the server in batches
+func (c *Client) processBatches(file *os.File) {
 	reader := bufio.NewScanner(file)
-	betBatcher := NewBetBatcher(c.config.ID, reader, c.betProtocol.LookAheadBatchSize, c.config.MaxBatchAmount)
+	betBatcher := NewBetBatcher(
+		c.config.ID,
+		reader,
+		c.betProtocol.LookAheadBatchSize,
+		c.config.MaxBatchAmount,
+	)
 
 	for betsToSend := betBatcher.GetBatch(); betsToSend != nil; betsToSend = betBatcher.GetBatch() {
-		if err := c.betProtocol.SendBatch(betsToSend); err != nil {
-			log.Errorf(
-				"action: send_bet | result: fail | client_id: %v | error: %v",
-				c.config.ID,
-				err,
-			)
+		if !c.sendBets(betsToSend) {
+			return
+		}
+		if !c.waitConfirmation(betsToSend) {
 			return
 		}
 
-		if err := c.betProtocol.ReceiveConfirmation(); err != nil {
-			log.Errorf(
-				"action: receive_confirmation | result: fail | client_id: %v | error: %v",
-				c.config.ID,
-				err,
-			)
-			return
-		}
-
-		log.Infof(
-			"action: batch_sending | result: success | client_id: %v | bets_sent: %v ",
-			c.config.ID,
-			len(betsToSend),
-		)
 	}
+}
+
+// sendBets Sends a batch of bets to the server using the protocol
+func (c *Client) sendBets(bets []Bet) bool {
+	if err := c.betProtocol.SendBatch(bets); err != nil {
+		log.Errorf(
+			"action: send_batch | result: fail | client_id: %v | error: %v",
+			c.config.ID,
+			err,
+		)
+		return false
+	}
+	return true
+}
+
+// waitConfirmation Waits for the server to confirm that the batch of bets was received and processed
+func (c *Client) waitConfirmation(bets []Bet) bool {
+	if err := c.betProtocol.ReceiveConfirmation(); err != nil {
+		log.Errorf(
+			"action: receive_confirmation | result: fail | client_id: %v | error: %v",
+			c.config.ID,
+			err,
+		)
+		return false
+	}
+
+	log.Infof(
+		"action: batch_sending | result: success | client_id: %v | bets_sent: %v",
+		c.config.ID,
+		len(bets),
+	)
+	return true
 }
