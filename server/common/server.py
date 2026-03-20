@@ -90,6 +90,8 @@ class Server:
                 if not bets:
                     break
                 store_bets(bets)
+                self._actual_session_protocol.send_confirmation()
                 logging.info(f"action: apuesta_recibida | result: success | cantidad: {len(bets)}")
         except BatchProcessingError as e:
+            self._actual_session_protocol.send_error()
             logging.error(f"action: apuesta_recibida | result: fail | cantidad: {e.batch_count}")
