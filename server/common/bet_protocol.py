@@ -39,7 +39,6 @@ class BetProtocol:
         """
         Receives multiple bets from the client socket and deserializes them.
         """
-        bets = []
         length_prefix_bytes = self._client_socket.receive_all(LENGTH_PREFIX_SIZE)
         batch_length = int.from_bytes(length_prefix_bytes, byteorder=BYTE_ORDER)
         batch_data = self.__decode_to_utf8(self._client_socket.receive_all(batch_length))
@@ -85,7 +84,7 @@ class BetProtocol:
         Raise Value error if a bet is not completed
         """
         bet_atributes = bet_data.split(BET_DIVIDER)
-        if len(bet_atributes != AMOUNT_OF_BET_ATRIBUTES):
+        if len(bet_atributes) != AMOUNT_OF_BET_ATRIBUTES:
             raise ValueError(f'invalid bet information: {bet_atributes}')
-        agency, first_name, last_name, document, birthdate, number = bet_data
+        agency, first_name, last_name, document, birthdate, number = bet_atributes
         return Bet(agency, first_name, last_name, document, birthdate, number)

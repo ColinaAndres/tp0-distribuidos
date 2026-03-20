@@ -98,8 +98,8 @@ func (c *Client) StartClient() {
 
 		log.Infof(
 			"action: batch_sending | result: success | client_id: %v | bets_sent: %v ",
-			len(betsToSend),
 			c.config.ID,
+			len(betsToSend),
 		)
 	}
 }
