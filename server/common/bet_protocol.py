@@ -7,6 +7,8 @@ BET_DIVIDER = ','
 BATCH_DIVIDER = '|'
 BYTE_ORDER = 'big'
 AMOUNT_OF_BET_ATRIBUTES = 6
+OK_CODE = b'\x01'
+ERROR_CODE = b'\x00'
 
 class BatchProcessingError(Exception):
     """
@@ -47,7 +49,13 @@ class BetProtocol:
         """
         Sends a confirmation message to the client socket.
         """
-        self._client_socket.send_all(b'\x01')
+        self._client_socket.send_all(OK_CODE)
+
+    def send_error(self):
+        """
+        Sends an error message to the client socket.
+        """
+        self._client_socket.send_all(ERROR_CODE)
 
     def close(self):
         """
