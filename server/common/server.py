@@ -84,7 +84,6 @@ class Server:
         If an error occurs during the storing of bets, it is logged and the server continues to run
         """
         try:
-            self.__handle_storing_bets()
             while self._running:
                 bets = self._actual_session_protocol.receive_bets()
                 if not bets:

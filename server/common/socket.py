@@ -13,6 +13,8 @@ class Socket:
         received_data = b''
         while len(received_data) < amount_to_receive:
             chunk = self._skt.recv(amount_to_receive - len(received_data))
+            if not chunk and not received_data:
+                return None
             if not chunk:
                 raise ConnectionError("Socket connection closed before receiving all data")    
             received_data += chunk

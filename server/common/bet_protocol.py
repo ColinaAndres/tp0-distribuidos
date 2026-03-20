@@ -40,6 +40,9 @@ class BetProtocol:
         Receives multiple bets from the client socket and deserializes them.
         """
         length_prefix_bytes = self._client_socket.receive_all(LENGTH_PREFIX_SIZE)
+        if not length_prefix_bytes:
+            return []
+        
         batch_length = int.from_bytes(length_prefix_bytes, byteorder=BYTE_ORDER)
         batch_data = self.__decode_to_utf8(self._client_socket.receive_all(batch_length))
         return self.__deserialize_bets(batch_data)
