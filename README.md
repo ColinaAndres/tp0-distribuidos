@@ -13,6 +13,7 @@
   - [Ejercicio 3](#ejercicio-3)
   - [Ejercicio 4](#ejercicio-4)
   - [Ejercicio 5](#ejercicio-5)
+  - [Ejercicio 6](#ejercicio-6)
 
 # TP0: Docker + Comunicaciones + Concurrencia
 
@@ -247,3 +248,45 @@ Para evitar short reads/writes y mezclar las capas de comunicación, negocio y t
 La clase `Socket`, la cual se encarga de asegurar el envío y recepción completa de bytes (*Nota: la librería estándar de Python provee en su objeto Socket nativo la función para asegurar el envío de bytes completo*). Para evitar los short reads/writes se emplea un loop donde se va escribiendo o leyendo bytes de forma gradual hasta asegurar que se envió la totalidad.
 
 La clase `BetProtocol`, la cual se encarga de serializar y armar los mensajes a enviar a través del socket y a su vez deserializar y armar los objetos apuestas al recibir los bytes dados por la clase Socket.
+
+
+### Ejercicio 6
+
+Continuando con la lógica del Ejercicio 5, se optó por ajustar el ya implementado protocolo para que cumpla con el envío por batches.
+
+El formato de los mensajes es:
+
+  - `[HEADER][PAYLOAD]` donde `HEADER` son dos bytes sin signo en big endian y `PAYLOAD` es un string serializado a bytes.
+
+  - `HEADER` representa el largo del PAYLOAD a enviar.
+
+  - `PAYLOAD` representa la información de un batch; este batch se serializa primero a string separado por el divisor `|`, de forma que el payload antes de convertirlo a bytes tiene la pinta: `<APUESTA1>|<APUESTA2>|...|<APUESTAN>`. NOTA: Internamente cada apuesta está representada de la misma forma que en el PAYLOAD del ejercicio 5, es decir, con el formato: `<AGENCIA>,<NOMBRE>,<APELLIDO>,<DOCUMENTO>,<NACIMIENTO>,<NUMERO>`.
+
+Flujo de la comunicación:
+
+  - Cliente:
+
+    - Se va consumiendo del archivo configurado agency.csv (el cual proviene del volumen definido en el docker-compose, permitiendo actualizar el archivo sin necesidad de recompilar la imagen).
+
+    - Al iniciar el cliente se entra en un loop donde se genera un batch que no puede exceder 8 kB ni el valor de la variable de entorno maxAmount, luego se envía al servidor y se espera por la confirmación por parte del servidor para volver a repetir la acción hasta que no haya más información que enviar.
+
+  - Servidor:
+
+    - Dentro de un loop, recibe un batch, lo procesa, envía la confirmación al cliente y repite la acción hasta que detecte que el cliente cierre la conexión y, por ende, no haya nada más para procesar.
+
+Una aclaración sobre no excederse de los 8 kB: al construir un batch, el `BetBatcher`, consulta al protocolo sobre el tamaño que se obtendria si se agrega una nueva APuesta al batch. Para ello el protocolo recibe el tamaño actual del batch más la apuesta a incluir y se analizan los siguientes casos:
+
+  - Si el tamaño recibido es cero, entonces se suma el tamaño del HEADER más el tamaño de la serialización de la apuesta.
+
+  - Si el tamaño recibido es mayor a cero, entonces suma el tamaño recibido, el tamaño del separador '|' y el tamaño de la serializacion de la apuesta a agregar.
+
+```go
+func (betProtocol *BetProtocol) LookAheadBatchSize(currentSize int, bet *Bet) int {
+	if currentSize == 0 {
+		return lengthPrefixSize + len(serializeBetPayload(bet))
+	}
+	return currentSize + len(batchDivider) + len(serializeBetPayload(bet))
+}
+```
+
+De esta manera el `BetBatcher` se asegura que al sumar cada elemento no se exceda del maximo de tamaño sin necesidad de saber como es la serializacion.
