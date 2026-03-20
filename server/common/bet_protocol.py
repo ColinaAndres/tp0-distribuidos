@@ -3,7 +3,8 @@ from common.socket import Socket
 from common.utils import Bet
 
 LENGTH_PREFIX_SIZE = 2
-DIVIDER = ','
+BET_DIVIDER = ','
+BATCH_DIVIDER = '|'
 BYTE_ORDER = 'big'
 class BetProtocol:
     """
@@ -19,9 +20,18 @@ class BetProtocol:
         """
         length_prefix_bytes = self._client_socket.receive_all(LENGTH_PREFIX_SIZE)
         message_length = int.from_bytes(length_prefix_bytes, byteorder=BYTE_ORDER)
-        data = self._client_socket.receive_all(message_length).decode('utf-8')
-        agency, first_name, last_name, document, birthdate, number = data.split(DIVIDER)
-        return Bet(agency, first_name, last_name, document, birthdate, number)
+        data = self.__decode_to_utf8(self._client_socket.receive_all(message_length))
+        return self.__deserialize_bet(data)
+    
+    def receive_bets(self) -> list[Bet]:
+        """
+        Receives multiple bets from the client socket and deserializes them.
+        """
+        bets = []
+        length_prefix_bytes = self._client_socket.receive_all(LENGTH_PREFIX_SIZE)
+        batch_length = int.from_bytes(length_prefix_bytes, byteorder=BYTE_ORDER)
+        batch_data = self.__decode_to_utf8(self._client_socket.receive_all(batch_length))
+        return self.__deserialize_bets(batch_data)
     
     def send_confirmation(self):
         """
@@ -34,3 +44,23 @@ class BetProtocol:
         Closes the client socket.
         """
         self._client_socket.close()
+
+    def __decode_to_utf8(self, data) -> str:
+        """
+        Decodes bytes data to a UTF-8 string.
+        """
+        return data.decode('utf-8')
+
+    def __deserialize_bets(self, batch_data) -> list[Bet]:
+        """
+        Deserializes a batch of bet data into a list of Bet objects.
+        """
+        stringed_bets = batch_data.split(BATCH_DIVIDER)
+        return list(map(self.__deserialize_bet, stringed_bets))
+    
+    def __deserialize_bet(self, bet_data) -> Bet :
+        """
+        Deserializes a single bet data string into a Bet object.
+        """
+        agency, first_name, last_name, document, birthdate, number = bet_data.split(BET_DIVIDER)
+        return Bet(agency, first_name, last_name, document, birthdate, number)
