@@ -33,6 +33,7 @@ const clientTemplate = `  client%d:
     entrypoint: /client
     environment:
       - CLI_ID=%d
+      - CLI_DATA_ROUTE=/agency.csv
     networks:
       - %s
     depends_on:
