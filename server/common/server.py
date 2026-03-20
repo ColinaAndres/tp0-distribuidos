@@ -1,7 +1,7 @@
 import socket
 import logging
 
-from common.bet_protocol import BetProtocol
+from common.bet_protocol import BatchProcessingError, BetProtocol
 from common.utils import store_bets
 from common.helpers import close_socket
 
@@ -51,10 +51,7 @@ class Server:
         client socket will also be closed
         """
         try:
-            bet = self._actual_session_protocol.receive_bet()
-            self._actual_session_protocol.send_confirmation()
-            store_bets([bet])
-            logging.info(f'action: apuesta_almacenada | result: success | dni: {bet.document} | numero: {bet.number}')
+            self.__handle_storing_bets()
         except (OSError, ConnectionError) as e:
             logging.error(f"action: receive_message | result: fail | error: {e}")
         finally:
@@ -79,4 +76,20 @@ class Server:
         except OSError as e:
             logging.error(f'action: accept_connections | result: fail | error: {e}')
             return None
-        
+    
+    def __handle_storing_bets(self):
+        """
+        Handle the storing of bets
+
+        If an error occurs during the storing of bets, it is logged and the server continues to run
+        """
+        try:
+            self.__handle_storing_bets()
+            while self._running:
+                bets = self._actual_session_protocol.receive_bets()
+                if not bets:
+                    break
+                store_bets(bets)
+                logging.info(f"action: apuesta_recibida | result: success | cantidad: {len(bets)}")
+        except BatchProcessingError as e:
+            logging.error(f"action: apuesta_recibida | result: fail | cantidad: {e.batch_count}")
