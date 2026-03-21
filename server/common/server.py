@@ -4,6 +4,7 @@ import logging
 from common.bet_protocol import BatchProcessingError, BetProtocol
 from common.utils import store_bets
 from common.helpers import close_socket
+from server.common.agency_session import AgencySession
 
 class Server:
     def __init__(self, port, listen_backlog, total_agencies):
@@ -11,7 +12,7 @@ class Server:
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
-        self._actual_session_protocol = None
+        self._agency_sessions = []
         self._total_agencies = total_agencies
         self._session_active = False
 
@@ -28,7 +29,7 @@ class Server:
         while self._running:
             client_sock = self.__accept_new_connection()
             if client_sock is not None:
-                self._actual_session_protocol = BetProtocol(client_sock)
+                self._agency_sessions.append(AgencySession(len(self._agency_sessions) + 1, BetProtocol(client_sock)))
                 self.__handle_client_connection()
 
     def graceful_shutdown(self, _signum, _frame):
