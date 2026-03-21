@@ -55,7 +55,7 @@ class BetProtocol:
             case self.FINALIZATION_BYTE:
                 pass
             case self.BATCH_SENDING_BYTE:
-                pass
+                return self.receive_bets()
             case _ :
                 return None
     
