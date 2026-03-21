@@ -2,9 +2,9 @@ import socket
 import logging
 
 from common.bet_protocol import BatchProcessingError, BetProtocol
-from common.utils import store_bets
+from common.utils import has_won, load_bets, store_bets
 from common.helpers import close_socket
-from server.common.agency_session import AgencySession
+from common.agency_session import AgencySession
 
 class Server:
     def __init__(self, port, listen_backlog, total_agencies):
@@ -16,6 +16,7 @@ class Server:
         self._total_agencies = total_agencies
         self._doned_agencies = 0
         self._session_active = False
+        self._winners = []
     
     def run(self):
         """
@@ -38,7 +39,7 @@ class Server:
 
         if self._running and self._doned_agencies == self._total_agencies:
             logging.info(f"action: sorteo | result: success")
-            # TODO: logica de distribucion
+            self.__distribute_winners()
 
     def graceful_shutdown(self, _signum, _frame):
         """
@@ -95,13 +96,21 @@ class Server:
         except OSError as e:
             logging.error(f'action: accept_connections | result: fail | error: {e}')
             return None
-    
-    def process_bets(self, bets):
+        
+    def __distribute_winners(self):
+        """
+        Distribute winners to agencies, every agency should be asking for winners
+        """
+        self._winners = list(filter(has_won, load_bets()))
+        for session in self._agency_sessions:
+            self.__handle_client_connection(session)
+
+    def process_bets(self, bets, agency):
         """
         Handle the storing of bets
         """
         store_bets(bets)
-        self._actual_session_protocol.send_confirmation()
+        agency.send_confirmation()
         logging.info(f"action: apuesta_recibida | result: success | cantidad: {len(bets)}")
 
     def finalize_reception_of_bets(self):
@@ -110,4 +119,11 @@ class Server:
         """
         self._session_active = False
         self._doned_agencies += 1
+
+    def send_winners(self, agency):
+        """
+        Handle the sending of winners to the client
+        """
+        agency_winners = list(filter(lambda bet: bet.agency_id == agency._agency_id, self._winners))
+        agency.send_winners(agency_winners)
     
