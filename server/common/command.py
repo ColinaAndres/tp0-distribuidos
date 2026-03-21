@@ -1,7 +1,7 @@
 
 class Command:
     """Base class for commands that can be executed on the server."""
-    def execute(self, server):
+    def execute(self, _server, _agency):
         pass
 
 class BetsProcessingCommand(Command):
@@ -10,10 +10,10 @@ class BetsProcessingCommand(Command):
         super().__init__()
         self._bets = bets
 
-    def execute(self, server):
-        server.process_bets(self._bets)
+    def execute(self, server, agency):
+        server.process_bets(self._bets, agency)
 
 class FinalizationCommand(Command):
     """Command to indicate the finalization of the bet sending."""
-    def execute(self, server):
+    def execute(self, server, _agency):
         server.finalize_reception_of_bets()
