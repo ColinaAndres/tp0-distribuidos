@@ -15,6 +15,7 @@ const (
 	confirmation     = 1
 	lengthPrefixSize = 2
 	confirmationSize = 1
+	batchHeaderSize  = 1 + lengthPrefixSize
 )
 
 // BetProtocol is a struct that encapsulates the logic for sending bets
@@ -71,7 +72,7 @@ func (betProtocol *BetProtocol) ReceiveConfirmation() error {
 // LookAheadBatchSize calculates the size of a batch of bets if a new bet is added to it.
 func (betProtocol *BetProtocol) LookAheadBatchSize(currentSize int, bet *Bet) int {
 	if currentSize == 0 {
-		return lengthPrefixSize + len(serializeBetPayload(bet))
+		return batchHeaderSize + len(serializeBetPayload(bet))
 	}
 	return currentSize + len(batchDivider) + len(serializeBetPayload(bet))
 }
