@@ -118,6 +118,7 @@ func (c *Client) processBatches(file *os.File) {
 		}
 
 	}
+	c.SendFinalization()
 }
 
 // sendBets Sends a batch of bets to the server using the protocol
@@ -149,5 +150,17 @@ func (c *Client) waitConfirmation(bets []Bet) bool {
 		c.config.ID,
 		len(bets),
 	)
+	return true
+}
+
+func (c *Client) SendFinalization() bool {
+	if err := c.betProtocol.SendFinalization(); err != nil {
+		log.Errorf(
+			"action: send_finalization | result: fail | client_id: %v | error: %v",
+			c.config.ID,
+			err,
+		)
+		return false
+	}
 	return true
 }
