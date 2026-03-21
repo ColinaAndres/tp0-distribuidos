@@ -29,8 +29,9 @@ class Server:
         while self._running:
             client_sock = self.__accept_new_connection()
             if client_sock is not None:
-                self._agency_sessions.append(AgencySession(len(self._agency_sessions) + 1, BetProtocol(client_sock)))
-                self.__handle_client_connection()
+                agency_session = AgencySession(len(self._agency_sessions) + 1, BetProtocol(client_sock))
+                self._agency_sessions.append(agency_session)
+                self.__handle_client_connection(agency_session)
 
     def graceful_shutdown(self, _signum, _frame):
         """
@@ -47,7 +48,7 @@ class Server:
             session.stop()
         logging.info('action: graceful_shutdown | result: success')
 
-    def __handle_client_connection(self):
+    def __handle_client_connection(self, agency_session):
         """
         Read message from a specific client socket and closes the socket
 
@@ -57,11 +58,11 @@ class Server:
         try:
             self._session_active = True
             while self._running and self._session_active:
-                client_request = self._actual_session_protocol.receive_request()
+                client_request = agency_session.receive_request()
                 if client_request:
                     client_request.execute(self)
         except BatchProcessingError as e:
-            self._actual_session_protocol.send_error()
+            agency_session.send_error()
             logging.error(f"action: apuesta_recibida | result: fail | cantidad: {e.batch_count}")
         except (OSError, ConnectionError) as e:
             logging.error(f"action: receive_message | result: fail | error: {e}")
