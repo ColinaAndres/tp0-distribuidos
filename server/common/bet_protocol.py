@@ -1,6 +1,7 @@
 
 from common.socket import Socket
 from common.utils import Bet
+from server.common.command import FinalizationCommand
 
 class BatchProcessingError(Exception):
     """
@@ -53,7 +54,7 @@ class BetProtocol:
         type_of_request = self._client_socket.receive_all(self.LENGTH_OF_TYPE)
         match type_of_request:
             case self.FINALIZATION_BYTE:
-                pass
+                return FinalizationCommand()
             case self.BATCH_SENDING_BYTE:
                 return self.receive_bets()
             case _ :
