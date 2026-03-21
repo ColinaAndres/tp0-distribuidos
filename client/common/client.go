@@ -66,6 +66,7 @@ func (c *Client) StartClient() {
 	defer file.Close()
 
 	c.processBatches(file)
+	c.informWinners()
 }
 
 // initializeProtocol Initializes the protocol used to send bets to the server
@@ -163,4 +164,21 @@ func (c *Client) SendFinalization() bool {
 		return false
 	}
 	return true
+}
+
+func (c *Client) informWinners() {
+	winners, err := c.betProtocol.ReceiveWinners()
+	if err != nil {
+		log.Errorf(
+			"action: receive_winners | result: fail | client_id: %v | error: %v",
+			c.config.ID,
+			err,
+		)
+		return
+	}
+
+	log.Infof(
+		"action: consulta_ganadores | result: success | cant_ganadores: %v",
+		len(winners),
+	)
 }
