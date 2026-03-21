@@ -6,12 +6,13 @@ from common.utils import store_bets
 from common.helpers import close_socket
 
 class Server:
-    def __init__(self, port, listen_backlog):
+    def __init__(self, port, listen_backlog, total_agencies):
         # Initialize server socket
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
         self._actual_session_protocol = None
+        self._total_agencies = total_agencies
         self._session_active = False
 
     def run(self):
