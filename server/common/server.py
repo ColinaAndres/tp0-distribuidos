@@ -31,7 +31,7 @@ class Server:
         while self._running and len(self._agency_sessions) < self._total_agencies:
             client_sock = self.__accept_new_connection()
             if client_sock:
-                session = AgencySession(len(self._agency_sessions) + 1, BetProtocol(client_sock))
+                session = AgencySession(str(len(self._agency_sessions) + 1), BetProtocol(client_sock))
                 self._agency_sessions.append(session)
                 
                 # Procesa hasta que llega el FinalizationCommand
@@ -69,7 +69,7 @@ class Server:
                 client_request = agency_session.receive_request()
                 # TODO: ver de tirar excepcion en el protocolo si se recibe algo no esperado o no
                 if client_request:
-                    client_request.execute(self)
+                    client_request.execute(self, agency_session)
         except BatchProcessingError as e:
             agency_session.send_error()
             logging.error(f"action: apuesta_recibida | result: fail | cantidad: {e.batch_count}")
@@ -119,11 +119,14 @@ class Server:
         """
         self._session_active = False
         self._doned_agencies += 1
+        logging.info(f"action: finalizacion_recepcion_apuestas | result: success")
 
     def send_winners(self, agency):
         """
         Handle the sending of winners to the client
         """
-        agency_winners = list(filter(lambda bet: bet.agency_id == agency._agency_id, self._winners))
+        agency_winners = list(filter(lambda bet: bet.agency == agency.agency_id, self._winners))
         agency.send_winners(agency_winners)
+        self._session_active = False
+
     

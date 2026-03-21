@@ -53,15 +53,14 @@ class BetProtocol:
     
     def receive_request(self) -> Command:
         type_of_request = self._client_socket.receive_all(self.LENGTH_OF_TYPE)
-        match type_of_request:
-            case self.FINALIZATION_BYTE:
-                return FinalizationCommand()
-            case self.BATCH_SENDING_BYTE:
-                return self.receive_bets()
-            case self.WINNERS_REQUEST_BYTE:
-                return WinnersRequestCommand()
-            case _ :
-                return None
+        if  type_of_request == self.FINALIZATION_BYTE:
+            return FinalizationCommand()
+        elif type_of_request == self.BATCH_SENDING_BYTE:
+            return self.receive_bets()
+        elif type_of_request == self.WINNERS_REQUEST_BYTE:
+            return WinnersRequestCommand()
+        else:
+            return None
     
     def send_confirmation(self):
         """
