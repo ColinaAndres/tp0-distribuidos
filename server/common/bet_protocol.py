@@ -44,7 +44,7 @@ class BetProtocol:
         """
         length_prefix_bytes = self._client_socket.receive_all(self.LENGTH_PREFIX_SIZE)
         if not length_prefix_bytes:
-            return []
+            return None
         
         batch_length = int.from_bytes(length_prefix_bytes, byteorder=self.BYTE_ORDER)
         batch_data = self.__decode_to_utf8(self._client_socket.receive_all(batch_length))
