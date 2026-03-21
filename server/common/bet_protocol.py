@@ -1,7 +1,7 @@
 
 from common.socket import Socket
 from common.utils import Bet
-from common.command import Command, FinalizationCommand, BetsProcessingCommand
+from common.command import Command, FinalizationCommand, BetsProcessingCommand, WinnersRequestCommand
 
 class BatchProcessingError(Exception):
     """
@@ -25,6 +25,7 @@ class BetProtocol:
     ERROR_CODE = b'\x00'
     FINALIZATION_BYTE = b'\x00'
     BATCH_SENDING_BYTE = b'\x01'
+    WINNERS_REQUEST_BYTE = b'\x02'
 
     def __init__(self, client_socket):
         self._client_socket = Socket(client_socket)
@@ -57,6 +58,8 @@ class BetProtocol:
                 return FinalizationCommand()
             case self.BATCH_SENDING_BYTE:
                 return self.receive_bets()
+            case self.WINNERS_REQUEST_BYTE:
+                return WinnersRequestCommand()
             case _ :
                 return None
     
