@@ -12,3 +12,8 @@ class BetsProcessingCommand(Command):
 
     def execute(self, server):
         server.process_bets(self._bets)
+
+class FinalizationCommand(Command):
+    """Command to indicate the finalization of the bet sending."""
+    def execute(self, server):
+        server.finalize_reception_of_bets()
