@@ -77,6 +77,12 @@ func (betProtocol *BetProtocol) LookAheadBatchSize(currentSize int, bet *Bet) in
 	return currentSize + len(batchDivider) + len(serializeBetPayload(bet))
 }
 
+// SendFinalization sends a finalization byte to the server to
+// indicate that no more bets will be sent.
+func (betProtocol *BetProtocol) SendFinalization() error {
+	return betProtocol.skt.SendAll([]byte{finalizationByte})
+}
+
 // Close closes the Socket connection used by the BetProtocol.
 func (betProtocol *BetProtocol) Close() error {
 	return betProtocol.skt.Close()
