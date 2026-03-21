@@ -17,3 +17,8 @@ class FinalizationCommand(Command):
     """Command to indicate the finalization of the bet sending."""
     def execute(self, server, _agency):
         server.finalize_reception_of_bets()
+
+class WinnersRequestCommand(Command):
+    """Command to request the winners of the bet."""
+    def execute(self, server, agency):
+        server.send_winners(agency)
