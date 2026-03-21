@@ -10,6 +10,8 @@ import (
 const (
 	batchDivider     = "|"
 	betDivider       = ","
+	finalizationByte = 0
+	batchSendingByte = 1
 	confirmation     = 1
 	lengthPrefixSize = 2
 	confirmationSize = 1
@@ -50,7 +52,7 @@ func (betProtocol *BetProtocol) SendBatch(bets []Bet) error {
 		}
 		serializedBatch = append(serializedBatch, serializeBetPayload(&bet)...)
 	}
-	serializedBatch = append(serializeLengthPrefix(serializedBatch), serializedBatch...)
+	serializedBatch = append(serializeBatchHeader(serializedBatch), serializedBatch...)
 	return betProtocol.skt.SendAll(serializedBatch)
 }
 
@@ -100,4 +102,8 @@ func serializeLengthPrefix(data []byte) []byte {
 	prefix := make([]byte, lengthPrefixSize)
 	binary.BigEndian.PutUint16(prefix, uint16(length))
 	return prefix
+}
+
+func serializeBatchHeader(batch []byte) []byte {
+	return append([]byte{batchSendingByte}, serializeLengthPrefix(batch)...)
 }
