@@ -74,6 +74,16 @@ class BetProtocol:
         Sends an error message to the client socket.
         """
         self._client_socket.send_all(self.ERROR_CODE)
+    
+    def send_winners(self, winners):
+        """
+        Sends the winners to the client socket.
+        """
+        documents = list(map(lambda bet: bet.document, winners))
+        serialized_winners = self.BATCH_DIVIDER.join(documents)
+        serialized_winners_bytes = serialized_winners.encode('utf-8')
+        length_prefix = len(serialized_winners_bytes).to_bytes(self.LENGTH_PREFIX_SIZE, byteorder=self.BYTE_ORDER)
+        self._client_socket.send_all(length_prefix + serialized_winners_bytes)
 
     def close(self):
         """
