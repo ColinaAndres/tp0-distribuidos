@@ -51,7 +51,7 @@ class Server:
         client socket will also be closed
         """
         try:
-            self.__handle_storing_bets()
+            self.process_bets()
         except (OSError, ConnectionError) as e:
             logging.error(f"action: receive_message | result: fail | error: {e}")
         finally:
@@ -77,7 +77,7 @@ class Server:
             logging.error(f'action: accept_connections | result: fail | error: {e}')
             return None
     
-    def __handle_storing_bets(self):
+    def process_bets(self, bets):
         """
         Handle the storing of bets
 
