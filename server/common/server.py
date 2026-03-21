@@ -43,7 +43,8 @@ class Server:
         logging.info('action: graceful_shutdown | result: in_progress')
         self._running = False
         close_socket(self._server_socket, "server")
-        self._actual_session_protocol.close()
+        for session in self._agency_sessions:
+            session.stop()
         logging.info('action: graceful_shutdown | result: success')
 
     def __handle_client_connection(self):
