@@ -8,14 +8,15 @@ import (
 )
 
 const (
-	batchDivider     = "|"
-	betDivider       = ","
-	finalizationByte = 0
-	batchSendingByte = 1
-	confirmation     = 1
-	lengthPrefixSize = 2
-	confirmationSize = 1
-	batchHeaderSize  = 1 + lengthPrefixSize
+	batchDivider       = "|"
+	betDivider         = ","
+	finalizationByte   = 0
+	batchSendingByte   = 1
+	winnersRequestByte = 2
+	confirmation       = 1
+	lengthPrefixSize   = 2
+	confirmationSize   = 1
+	batchHeaderSize    = 1 + lengthPrefixSize
 )
 
 // BetProtocol is a struct that encapsulates the logic for sending bets
@@ -81,6 +82,23 @@ func (betProtocol *BetProtocol) LookAheadBatchSize(currentSize int, bet *Bet) in
 // indicate that no more bets will be sent.
 func (betProtocol *BetProtocol) SendFinalization() error {
 	return betProtocol.skt.SendAll([]byte{finalizationByte})
+}
+
+func (betProtocol *BetProtocol) ReceiveWinners() ([]string, error) {
+	if err := betProtocol.skt.SendAll([]byte{winnersRequestByte}); err != nil {
+		return nil, err
+	}
+	lengthPrefixBytes, err := betProtocol.skt.ReceiveAll(lengthPrefixSize)
+	if err != nil {
+		return nil, err
+	}
+	winnersLength := int(binary.BigEndian.Uint16(lengthPrefixBytes))
+	winnersData, err := betProtocol.skt.ReceiveAll(winnersLength)
+	if err != nil {
+		return nil, err
+	}
+	winners := strings.Split(string(winnersData), betDivider)
+	return winners, nil
 }
 
 // Close closes the Socket connection used by the BetProtocol.
