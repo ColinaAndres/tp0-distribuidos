@@ -21,6 +21,7 @@ const serverTemplate = `  server:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
+      - TOTAL_AGENCIES=%d
     networks:
       - %s
     volumes:
@@ -51,8 +52,8 @@ const networkTemplate = `networks:
         - subnet: 172.25.125.0/24
 `
 
-func serverContent() string {
-	return fmt.Sprintf(serverTemplate, serverContainerName, serverImage, networkName)
+func serverContent(amountOfClients int) string {
+	return fmt.Sprintf(serverTemplate, serverContainerName, serverImage, amountOfClients, networkName)
 }
 
 func clientsContent(amountOfClients int) string {
@@ -79,7 +80,7 @@ func network() string {
 func services(amountOfClients int) string {
 	var parts []string
 	servicesHeader := "services:"
-	parts = append(parts, servicesHeader, serverContent(), clientsContent(amountOfClients))
+	parts = append(parts, servicesHeader, serverContent(amountOfClients), clientsContent(amountOfClients))
 	return strings.Join(parts, "\n")
 }
 
