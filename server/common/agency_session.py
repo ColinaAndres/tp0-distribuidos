@@ -13,4 +13,7 @@ class AgencySession:
     def receive_request(self) -> Command:
         """Receives a request from protocol."""
         return self._protocol.receive_request()
-    
+
+    def stop(self):
+        """Closes the protocol connection."""
+        self._protocol.close()
