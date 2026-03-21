@@ -1,7 +1,7 @@
 
 from common.socket import Socket
 from common.utils import Bet
-from server.common.command import FinalizationCommand
+from common.command import Command, FinalizationCommand, BetsProcessingCommand
 
 class BatchProcessingError(Exception):
     """
@@ -38,7 +38,7 @@ class BetProtocol:
         data = self.__decode_to_utf8(self._client_socket.receive_all(message_length))
         return self.__deserialize_bet(data)
     
-    def receive_bets(self) -> list[Bet]:
+    def receive_bets(self) -> BetsProcessingCommand:
         """
         Receives multiple bets from the client socket and deserializes them.
         """
@@ -48,9 +48,9 @@ class BetProtocol:
         
         batch_length = int.from_bytes(length_prefix_bytes, byteorder=self.BYTE_ORDER)
         batch_data = self.__decode_to_utf8(self._client_socket.receive_all(batch_length))
-        return self.__deserialize_bets(batch_data)
+        return BetsProcessingCommand(self.__deserialize_bets(batch_data))
     
-    def receive_request(self):
+    def receive_request(self) -> Command:
         type_of_request = self._client_socket.receive_all(self.LENGTH_OF_TYPE)
         match type_of_request:
             case self.FINALIZATION_BYTE:
