@@ -12,6 +12,7 @@ class Server:
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
         self._actual_session_protocol = None
+        self._session_active = False
 
     def run(self):
         """
@@ -51,12 +52,20 @@ class Server:
         client socket will also be closed
         """
         try:
-            self.process_bets()
+            self._session_active = True
+            while self._running and self._session_active:
+                client_request = self._actual_session_protocol.receive_request()
+                if client_request:
+                    client_request.execute(self)
+        except BatchProcessingError as e:
+            self._actual_session_protocol.send_error()
+            logging.error(f"action: apuesta_recibida | result: fail | cantidad: {e.batch_count}")
         except (OSError, ConnectionError) as e:
             logging.error(f"action: receive_message | result: fail | error: {e}")
         finally:
             self._actual_session_protocol.close()
             self._actual_session_protocol = None
+            self._session_active = False
 
     def __accept_new_connection(self):
         """
@@ -80,17 +89,13 @@ class Server:
     def process_bets(self, bets):
         """
         Handle the storing of bets
-
-        If an error occurs during the storing of bets, it is logged and the server continues to run
         """
-        try:
-            while self._running:
-                bets = self._actual_session_protocol.receive_bets()
-                if not bets:
-                    break
-                store_bets(bets)
-                self._actual_session_protocol.send_confirmation()
-                logging.info(f"action: apuesta_recibida | result: success | cantidad: {len(bets)}")
-        except BatchProcessingError as e:
-            self._actual_session_protocol.send_error()
-            logging.error(f"action: apuesta_recibida | result: fail | cantidad: {e.batch_count}")
+        store_bets(bets)
+        self._actual_session_protocol.send_confirmation()
+        logging.info(f"action: apuesta_recibida | result: success | cantidad: {len(bets)}")
+
+    def finalize_reception_of_bets(self):
+        """
+        Handle the finalization of the reception of bets
+        """
+        self._session_active = False
