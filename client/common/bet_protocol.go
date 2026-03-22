@@ -98,6 +98,11 @@ func (betProtocol *BetProtocol) ReceiveWinners() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	if len(winnersData) == 0 {
+		return []string{}, nil
+	}
+
 	winners := strings.Split(string(winnersData), documentDivider)
 	return winners, nil
 }
