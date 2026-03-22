@@ -12,7 +12,6 @@ class AgencySession:
 
     def receive_request(self) -> Command:
         """Receives a request from protocol."""
-        request = self._protocol.receive_request()
         return self._protocol.receive_request()
     
     def send_error(self):
