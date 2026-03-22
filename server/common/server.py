@@ -31,7 +31,7 @@ class Server:
         while self._running and len(self._agency_sessions) < self._total_agencies:
             client_sock = self.__accept_new_connection()
             if client_sock:
-                session = AgencySession(str(len(self._agency_sessions) + 1), BetProtocol(client_sock))
+                session = AgencySession(BetProtocol(client_sock))
                 self._agency_sessions.append(session)
                 
                 # Procesa hasta que llega el FinalizationCommand

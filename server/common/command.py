@@ -9,8 +9,10 @@ class BetsProcessingCommand(Command):
     def __init__(self, bets):
         super().__init__()
         self._bets = bets
+        self._agency_id = bets[0].agency if bets else None
 
     def execute(self, server, agency):
+        agency.agency_id = self._agency_id
         server.process_bets(self._bets, agency)
 
 class FinalizationCommand(Command):

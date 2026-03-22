@@ -6,12 +6,13 @@ class AgencySession:
     """
     Class that represents a session with an agency
     """
-    def __init__(self, agency_id, protocol):
+    def __init__(self, protocol, agency_id=None):
         self.agency_id = agency_id
         self._protocol = protocol
 
     def receive_request(self) -> Command:
         """Receives a request from protocol."""
+        request = self._protocol.receive_request()
         return self._protocol.receive_request()
     
     def send_error(self):
