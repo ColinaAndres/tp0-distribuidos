@@ -19,6 +19,7 @@ class BetProtocol:
     LENGTH_PREFIX_SIZE = 2
     BET_DIVIDER = ','
     BATCH_DIVIDER = '|'
+    DOCUMENT_DIVIDER = ','
     BYTE_ORDER = 'big'
     AMOUNT_OF_BET_ATRIBUTES = 6
     OK_CODE = b'\x01'
@@ -79,7 +80,7 @@ class BetProtocol:
         Sends the winners to the client socket.
         """
         documents = list(map(lambda bet: bet.document, winners))
-        serialized_winners = self.BATCH_DIVIDER.join(documents)
+        serialized_winners = self.DOCUMENT_DIVIDER.join(documents)
         serialized_winners_bytes = serialized_winners.encode('utf-8')
         length_prefix = len(serialized_winners_bytes).to_bytes(self.LENGTH_PREFIX_SIZE, byteorder=self.BYTE_ORDER)
         self._client_socket.send_all(length_prefix + serialized_winners_bytes)

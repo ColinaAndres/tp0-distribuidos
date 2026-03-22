@@ -10,6 +10,7 @@ import (
 const (
 	batchDivider       = "|"
 	betDivider         = ","
+	documentDivider    = ","
 	finalizationByte   = 0
 	batchSendingByte   = 1
 	winnersRequestByte = 2
@@ -97,7 +98,7 @@ func (betProtocol *BetProtocol) ReceiveWinners() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	winners := strings.Split(string(winnersData), betDivider)
+	winners := strings.Split(string(winnersData), documentDivider)
 	return winners, nil
 }
 
