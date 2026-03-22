@@ -1,5 +1,8 @@
 
+import logging
+
 from common.command import Command
+from server.common.bet_protocol import BatchProcessingError
 
 
 class AgencySession:
@@ -9,6 +12,23 @@ class AgencySession:
     def __init__(self, protocol, agency_id=None):
         self.agency_id = agency_id
         self._protocol = protocol
+
+    def receive_bets(self):
+        """
+        Recibe batches de bets hasta que el cliente manda FinalizationCommand.
+        """
+        try:
+            while True:
+                request = self._protocol.receive_request()
+                if request is None:
+                    break
+                done = request.execute(self, self._coordinator)
+                if done:  # FinalizationCommand retorna True
+                    break
+                self._protocol.send_confirmation()
+        except BatchProcessingError as e:
+            self._protocol.send_error()
+            logging.error(f"action: apuesta_recibida | result: fail | cantidad: {e.batch_count}")
 
     def receive_request(self) -> Command:
         """Receives a request from protocol."""
