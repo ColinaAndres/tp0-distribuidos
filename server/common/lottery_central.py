@@ -1,5 +1,6 @@
 from common.utils import store_bets, load_bets, has_won
 import logging
+import threading
 
 class Lottery_central:
     """
@@ -9,6 +10,8 @@ class Lottery_central:
         self._total_agencies = total_agencies
         self._done_agencies = 0
         self._winners = []
+        self._lock = threading.Lock()
+        self._barrier = threading.Barrier(total_agencies)
 
     def process_bets(self, bets):
         """
