@@ -48,6 +48,13 @@ class AgencySession:
             self._protocol.send_winners(winners)
         except ConnectionError:
             self.__connection_error_handler()
+    
+    def send_confirmation(self):
+        """Sends a confirmation to the protocol."""
+        try:
+            self._protocol.send_confirmation()
+        except ConnectionError:
+            self.__connection_error_handler()
 
     def stop(self):
         """Closes the protocol connection."""
