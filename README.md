@@ -262,6 +262,8 @@ El formato de los mensajes es:
 
   - `PAYLOAD` representa la información de un batch; este batch se serializa primero a string separado por el divisor `|`, de forma que el payload antes de convertirlo a bytes tiene la pinta: `<APUESTA1>|<APUESTA2>|...|<APUESTAN>`. NOTA: Internamente cada apuesta está representada de la misma forma que en el PAYLOAD del ejercicio 5, es decir, con el formato: `<AGENCIA>,<NOMBRE>,<APELLIDO>,<DOCUMENTO>,<NACIMIENTO>,<NUMERO>`.
 
+  - Si hubo exito en la recepcion del batch se envia un byte `1`, caso contrario se envia un byte `0`
+
 Flujo de la comunicación:
 
   - Cliente:
@@ -270,9 +272,12 @@ Flujo de la comunicación:
 
     - Al iniciar el cliente se entra en un loop donde se genera un batch que no puede exceder 8 kB ni el valor de la variable de entorno maxAmount, luego se envía al servidor y se espera por la confirmación por parte del servidor para volver a repetir la acción hasta que no haya más información que enviar.
 
+    - Si el cliente no recibe confirmacion sino que recibe error, vuelve a enviar el batch.
+
   - Servidor:
 
-    - Dentro de un loop, recibe un batch, lo procesa, envía la confirmación al cliente y repite la acción hasta que detecte que el cliente cierre la conexión y, por ende, no haya nada más para procesar.
+    - Dentro de un loop, recibe un batch, lo procesa, envía la confirmación con el byte `1` al cliente y repite la acción hasta que detecte que el cliente cierre la conexión y, por ende, no haya nada más para procesar.
+    - Si si detecta un error en los batches al recibirlos, el servidor le envia al cliente un byte `0` para indicarle que hubo un error y no se procesa el batch.
 
 Una aclaración sobre no excederse de los 8 kB: al construir un batch, el `BetBatcher`, consulta al protocolo sobre el tamaño que se obtendria si se agrega una nueva APuesta al batch. Para ello el protocolo recibe el tamaño actual del batch más la apuesta a incluir y se analizan los siguientes casos:
 
