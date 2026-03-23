@@ -24,8 +24,16 @@ class Server:
         communication with a client. After client with communucation
         finishes, servers starts to accept new connections again
         """
-
         self._running = True
+        try:
+            while self._running:
+                self.__work()
+        except Exception as e:
+            logging.error(f'action: server_run | result: fail | error: {e}')
+        finally:
+            self.graceful_shutdown(None, None)
+
+    def __work(self):
         while self._running and not self._lottery_central.draw_done():
             client_sock = self.__accept_new_connection()
             if client_sock:
