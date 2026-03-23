@@ -8,11 +8,12 @@ import (
 )
 
 const (
-	batchDivider     = "|"
-	betDivider       = ","
-	confirmation     = 1
-	lengthPrefixSize = 2
-	confirmationSize = 1
+	batchDivider      = "|"
+	betDivider        = ","
+	confirmation      = 1
+	errorConfirmation = 0
+	lengthPrefixSize  = 2
+	confirmationSize  = 1
 )
 
 // BetProtocol is a struct that encapsulates the logic for sending bets
@@ -55,15 +56,19 @@ func (betProtocol *BetProtocol) SendBatch(bets []Bet) error {
 }
 
 // ReceiveConfirmation waits for a confirmation byte from the server after sending a bet.
-// It returns an error if the confirmation is not received or if any error occurs during receiving.
-func (betProtocol *BetProtocol) ReceiveConfirmation() error {
+// It returns true if the confirmation is received successfully,
+// false if an error confirmation is received,
+// and an error if any issue occurs during the receiving process.
+func (betProtocol *BetProtocol) ReceiveConfirmation() (bool, error) {
 	buff, err := betProtocol.skt.ReceiveAll(confirmationSize)
 	if err != nil {
-		return err
-	} else if buff[0] != confirmation {
-		return fmt.Errorf("confirmation not received")
+		return false, err
+	} else if buff[0] == errorConfirmation {
+		return false, nil
+	} else if buff[0] == confirmation {
+		return true, nil
 	}
-	return nil
+	return false, fmt.Errorf("unexpected confirmation value")
 }
 
 // LookAheadBatchSize calculates the size of a batch of bets if a new bet is added to it.
