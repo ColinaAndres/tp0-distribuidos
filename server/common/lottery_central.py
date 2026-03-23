@@ -45,4 +45,4 @@ class Lottery_central:
         Run the lottery, storing the winners and logging the action
         """
         self._winners = list(filter(has_won, load_bets()))
-        logging.info(f"action: sorteo | result: success | ganadores: {len(self._winners)}")
+        

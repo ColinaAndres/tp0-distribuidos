@@ -35,7 +35,7 @@ class Server:
 
         if self._running:
             for session in self._agency_sessions:
-                session.send_winners()
+                session.receive_winners_request()
 
     def graceful_shutdown(self, _signum, _frame):
         """

@@ -13,7 +13,7 @@ class BetsProcessingCommand(Command):
 
     def execute(self, lottery_central, agency) -> bool:
         agency.agency_id = self._agency_id
-        lottery_central.process_bets(self._bets, agency)
+        lottery_central.process_bets(self._bets)
         return False
 
 class FinalizationCommand(Command):
@@ -26,5 +26,6 @@ class FinalizationCommand(Command):
 class WinnersRequestCommand(Command):
     """Command to request the winners of the bet."""
     def execute(self, lottery_central, agency) -> bool:
-        lottery_central.send_winners(agency)
+        winners = lottery_central.get_winners_for_agency(agency.agency_id)
+        agency.send_winners(winners)
         return False
