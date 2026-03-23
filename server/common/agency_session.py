@@ -9,13 +9,14 @@ class AgencySession:
         self.agency_id = agency_id
         self._protocol = protocol
         self._lottery_central = lottery_central
+        self._running = True
 
     def receive_bets(self):
         """
         Receives bets from the client until a finalization command is received.
         """
         try:
-            while True:
+            while self._running:
                 request = self._protocol.receive_request()
                 if request is None:
                     break
@@ -50,7 +51,17 @@ class AgencySession:
 
     def stop(self):
         """Closes the protocol connection."""
+        self._running = False
         self._protocol.close()
+
+    def close_if_stoped(self) -> bool:
+        """
+        Closes the protocol connection if the session is stopped.
+        Returns True if the session is stopped, False otherwise.
+        """
+        if not self._running:
+            self.stop()
+        return not self._running
 
     def __batch_processing_error_handler(self, error):
         """
