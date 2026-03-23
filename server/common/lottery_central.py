@@ -25,6 +25,7 @@ class Lottery_central:
         self._done_agencies += 1
         logging.info(f"action: finalizacion_recepcion_apuestas | result: success")
         if self._done_agencies == self._total_agencies:
+            logging.info(f"action: sorteo | result: success")
             self._run_lottery()
 
     def draw_done(self) -> bool:
