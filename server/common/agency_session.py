@@ -15,14 +15,14 @@ class AgencySession:
 
     def receive_bets(self):
         """
-        Recibe batches de bets hasta que el cliente manda FinalizationCommand.
+        Receives bets from the client until a finalization command is received.
         """
         try:
             while True:
                 request = self._protocol.receive_request()
                 if request is None:
                     break
-                done = request.execute(self, self._coordinator)
+                done = request.execute(self._coordinator, self)
                 if done:  # FinalizationCommand retorna True
                     break
                 self._protocol.send_confirmation()
@@ -30,6 +30,16 @@ class AgencySession:
             self._protocol.send_error()
             logging.error(f"action: apuesta_recibida | result: fail | cantidad: {e.batch_count}")
 
+    def send_winners(self):
+        """
+        Waits for client to request winners, then sends them to the client. If the client disconnects, logs the error.
+        """
+        request = self._protocol.receive_request()
+        if request is None:
+            logging.error(f"action: send_winners_phase | result: fail | reason: client disconnected")
+            return
+        request.execute(self._coordinator, self)
+    
     def receive_request(self) -> Command:
         """Receives a request from protocol."""
         return self._protocol.receive_request()
@@ -41,10 +51,6 @@ class AgencySession:
     def send_confirmation(self):
         """Sends a confirmation message to the protocol."""
         self._protocol.send_confirmation()
-
-    def send_winners(self, winners):
-        """Sends the winners to the protocol."""
-        self._protocol.send_winners(winners)
 
     def stop(self):
         """Closes the protocol connection."""
