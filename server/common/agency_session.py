@@ -26,7 +26,7 @@ class AgencySession:
         except BatchProcessingError as e:
             self.__batch_processing_error_handler(self, e)
         except ConnectionError:
-            logging.error(f"action: apuesta_recibida | result: fail | reason: client disconnected")
+            self.__connection_error_handler()
 
     def receive_winners_request(self):
         """
@@ -35,18 +35,18 @@ class AgencySession:
         try:
             request = self._protocol.receive_request()
             if request is None:
-                logging.error(f"action: send_winners_phase | result: fail | reason: client disconnected")
+                self.__connection_error_handler()
                 return
             request.execute(self._lottery_central, self)
         except ConnectionError:
-            logging.error(f"action: send_winners_phase | result: fail | reason: client disconnected")
+            self.__connection_error_handler()
 
     def send_winners(self, winners):
         """Sends the winners to the protocol."""
         try:
             self._protocol.send_winners(winners)
         except ConnectionError:
-            logging.error(f"action: send_winners | result: fail | reason: client disconnected")
+            self.__connection_error_handler()
 
     def stop(self):
         """Closes the protocol connection."""
@@ -60,4 +60,11 @@ class AgencySession:
             self._protocol.send_error()
             logging.error(f"action: apuesta_recibida | result: fail | cantidad: {error.batch_count}")
         except ConnectionError:
-            logging.error(f"action: apuesta_recibida | result: fail | reason: client disconnected")
+            self.__connection_error_handler()
+    
+    def __connection_error_handler(self):
+        """
+        Handles ConnectionError by logging the error.
+        """
+        self._running = False
+        logging.error(f"action: apuesta_recibida | result: fail | reason: client disconnected")
