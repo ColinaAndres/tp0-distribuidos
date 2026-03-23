@@ -87,6 +87,3 @@ class Server:
         self.__cleanup()
         close_socket(self._server_socket, "server")
         logging.info('action: graceful_shutdown | result: success')
-
-
-        
