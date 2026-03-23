@@ -1,8 +1,7 @@
 import socket
 import logging
-
-from common.bet_protocol import BatchProcessingError, BetProtocol
-from common.utils import has_won, load_bets, store_bets
+import threading
+from common.bet_protocol import BetProtocol
 from common.helpers import close_socket
 from common.agency_session import AgencySession
 from common.lottery_central import Lottery_central
@@ -33,19 +32,13 @@ class Server:
             self.graceful_shutdown(None, None)
 
     def __work(self):
-        while self._running and not self._lottery_central.draw_done():
+        while self._running:
             client_sock = self.__accept_new_connection()
             if client_sock:
                 session = AgencySession(BetProtocol(client_sock), self._lottery_central)
                 self._agency_sessions.append(session)
-                session.receive_bets()
+                threading.Thread(target=session.run).start()
                 self.__remove_stopped_sessions()
-
-        if self._running:
-            for session in self._agency_sessions:
-                session.receive_winners_request()
-        
-        self.__cleanup()
 
     def __accept_new_connection(self):
         """
