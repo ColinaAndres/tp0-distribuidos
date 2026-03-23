@@ -14,3 +14,4 @@ def close_socket(skt, socket_name):
             logging.info(f'action: closing_{socket_name}_socket | result: success')
         except OSError as e:
             logging.error(f'action: closing_{socket_name}_socket | result: fail | error: {e}')
+            

@@ -17,11 +17,7 @@ class Server:
     
     def run(self):
         """
-        Dummy Server loop
-
-        Server that accept a new connections and establishes a
-        communication with a client. After client with communucation
-        finishes, servers starts to accept new connections again
+        Runs the server, catches any unexpected exceptions and ensures graceful shutdown.
         """
         self._running = True
         try:
@@ -32,6 +28,12 @@ class Server:
             self.graceful_shutdown(None, None)
 
     def __work(self):
+        """
+        Main work loop for the server.
+        The server accepts new connections and creates sessions for each agency. 
+        It also removes stopped sessions from the list of agency sessions.
+        The loop continues until the server is stopped.
+        """
         while self._running:
             client_sock = self.__accept_new_connection()
             if client_sock:

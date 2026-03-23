@@ -25,16 +25,9 @@ class Lottery_central:
         """
         Register that an agency has finished sending bets, 
         if all agencies are done, runs the lottery
-        Ensures that the registration of done agencies is thread safe
         """
         logging.info(f"action: finalizacion_recepcion_apuestas | result: success")
         self._barrier.wait()
-
-    # def draw_done(self) -> bool:
-    #     """
-    #     Check if the lottery draw is done
-    #     """
-    #     return True if self._winners else False
 
     def get_winners_for_agency(self, agency_id) -> list:
         """

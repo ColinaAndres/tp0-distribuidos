@@ -26,3 +26,4 @@ class WinnersRequestCommand(Command):
     def execute(self, lottery_central, agency) -> bool:
         winners = lottery_central.get_winners_for_agency(agency.agency_id)
         agency.send_winners(winners)
+        
