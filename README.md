@@ -14,6 +14,7 @@
   - [Ejercicio 4](#ejercicio-4)
   - [Ejercicio 5](#ejercicio-5)
   - [Ejercicio 6](#ejercicio-6)
+  - [Ejercicio 7](#ejercicio-7)
 
 # TP0: Docker + Comunicaciones + Concurrencia
 
@@ -290,3 +291,32 @@ func (betProtocol *BetProtocol) LookAheadBatchSize(currentSize int, bet *Bet) in
 ```
 
 De esta manera el `BetBatcher` se asegura que al sumar cada elemento no se exceda del maximo de tamaño sin necesidad de saber como es la serializacion.
+
+
+### Ejercicio 7
+Nuevamente, partiendo del ejercicio anterior, se realizan cambios chicos al protocolo:
+
+  - Para identificar el pedido de cada cliente, se le suma al inicio de cada mensaje un byte que simboliza el tipo del mensaje a enviar posteriormente:
+  - Si corresponde al envío de un Batch, se le antepone el byte `1`.
+  - Si corresponde al envío de finalización (no más batches), se envía el byte `0` y nada más, pues no hay ningún payload.
+  - Si corresponde al pedido de los ganadores de la agencia, se envía el byte `2` y nada más, pues no hay ningún payload.
+
+Flujo de comunicación:
+
+  - Cliente:
+    - Una vez terminado el envío de los batches, se envía la notificación de finalización con el byte `0`.
+    - Inmediatamente, se espera por los ganadores de la agencia; para ello, se envía el byte `2` y se queda esperando por los documentos de los ganadores.
+    - Finalmente, se loguea la cantidad de ganadores recibidos.
+
+  - Servidor:
+    - Acepta la conexión de un cliente y va procesando sus batches; una vez que recibe el mensaje de finalización, revisa si todos los clientes enviaron sus apuestas (se sabe la cantidad de clientes, pues se le pasa por variable de entorno inyectada en el docker-compose mediante el script de generación); en caso de que no se hayan enviado todas, le suma 1 a un contador interno; sino, loguea que el sorteo fue un éxito y se dispone a cargar los ganadores.
+    - Una vez finalizada la acción anterior, se itera sobre todas las conexiones con los clientes de forma que, al recibir el mensaje de petición de ganadores, se les puedan enviar.
+    - El envío de los ganadores es un mensaje nuevo del protocolo donde primero se envía el largo del payload de la misma forma que los ejercicios anteriores, y el payload son strings encodeados con la siguiente forma: `<Documento1>,<Documento2>,<...>,<DocumentoN>`.
+
+Aclaraciones:
+
+  - La lógica de negocio fue encapsulada en una clase LotteryCentral para que el servidor no tenga tanta responsabilidad.
+  - La conexión con los clientes se abstrae en una clase AgencySession, la cual será la encargada de encapsular el uso del protocolo del cliente.
+  - Dada la naturaleza secuencial del ejercicio y que se tiene que anunciar a los clientes sus ganadores, al aceptar las conexiones estas se guardan en el servidor de forma tal que puedan ser iteradas para volver a atenderlas en la fase de envíos.
+  - Si algún cliente llegara a desconectarse mientras se envían sus batches, se lo elimina de la lista y se liberan sus recursos; esto será útil cuando se trabajen con hilos.
+  - Al ser una solución secuencial, no hay problema en el acceso a los recursos compartidos.
