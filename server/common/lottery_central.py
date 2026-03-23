@@ -8,28 +8,27 @@ class Lottery_central:
     """
     def __init__(self, total_agencies):
         self._total_agencies = total_agencies
-        self._done_agencies = 0
         self._winners = []
         self._lock = threading.Lock()
-        self._barrier = threading.Barrier(total_agencies)
+        self._barrier = threading.Barrier(total_agencies, action=self._run_lottery)
 
     def process_bets(self, bets):
         """
-        Process the bets received from an agency, storing them and logging the action
+        Process the bets received from an agency, storing them and logging the action,
+        It ensures that the storage of bets is thread safe
         """
-        store_bets(bets)
+        with self._lock:
+            store_bets(bets)
         logging.info(f"action: apuesta_recibida | result: success | cantidad: {len(bets)}")
 
     def register_agency_done(self):
         """
         Register that an agency has finished sending bets, 
         if all agencies are done, runs the lottery
+        Ensures that the registration of done agencies is thread safe
         """
-        self._done_agencies += 1
         logging.info(f"action: finalizacion_recepcion_apuestas | result: success")
-        if self._done_agencies == self._total_agencies:
-            logging.info(f"action: sorteo | result: success")
-            self._run_lottery()
+        self._barrier.wait()
 
     def draw_done(self) -> bool:
         """
@@ -40,6 +39,9 @@ class Lottery_central:
     def get_winners_for_agency(self, agency_id) -> list:
         """
         Get the winners for a specific agency id
+        As it is a lecture only operation, it does not require locking
+        as the winners list is only modified in the _run_lottery method, 
+        which is called after all agencies have registered as done
         """
         return list(filter(lambda bet: bet.agency == agency_id, self._winners))
 
@@ -47,5 +49,6 @@ class Lottery_central:
         """
         Run the lottery, storing the winners and logging the action
         """
+        logging.info(f"action: sorteo | result: success")
         self._winners = list(filter(has_won, load_bets()))
         
