@@ -111,13 +111,18 @@ func (c *Client) processBatches(file *os.File) {
 	)
 
 	for betsToSend := betBatcher.GetBatch(); betsToSend != nil; betsToSend = betBatcher.GetBatch() {
-		if !c.sendBets(betsToSend) {
-			return
+		for {
+			if !c.sendBets(betsToSend) {
+				return
+			}
+			confirmed, err := c.waitConfirmation(betsToSend)
+			if err != nil {
+				return
+			}
+			if confirmed {
+				break
+			}
 		}
-		if !c.waitConfirmation(betsToSend) {
-			return
-		}
-
 	}
 	c.SendFinalization()
 }
@@ -136,14 +141,22 @@ func (c *Client) sendBets(bets []Bet) bool {
 }
 
 // waitConfirmation Waits for the server to confirm that the batch of bets was received and processed
-func (c *Client) waitConfirmation(bets []Bet) bool {
-	if err := c.betProtocol.ReceiveConfirmation(); err != nil {
+func (c *Client) waitConfirmation(bets []Bet) (bool, error) {
+	confirmed, err := c.betProtocol.ReceiveConfirmation()
+	if err != nil {
 		log.Errorf(
 			"action: receive_confirmation | result: fail | client_id: %v | error: %v",
 			c.config.ID,
 			err,
 		)
-		return false
+		return confirmed, err
+	}
+	if !confirmed {
+		log.Errorf(
+			"action: receive_confirmation | result: error_confirmation_received | client_id: %v",
+			c.config.ID,
+		)
+		return confirmed, nil
 	}
 
 	log.Infof(
@@ -151,7 +164,7 @@ func (c *Client) waitConfirmation(bets []Bet) bool {
 		c.config.ID,
 		len(bets),
 	)
-	return true
+	return true, nil
 }
 
 func (c *Client) SendFinalization() bool {
