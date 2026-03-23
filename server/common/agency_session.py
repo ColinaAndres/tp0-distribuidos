@@ -9,9 +9,10 @@ class AgencySession:
     """
     Class that represents a session with an agency
     """
-    def __init__(self, protocol, agency_id=None):
+    def __init__(self, protocol, lottery_central, agency_id=None):
         self.agency_id = agency_id
         self._protocol = protocol
+        self._lottery_central = lottery_central
 
     def receive_bets(self):
         """
@@ -22,7 +23,7 @@ class AgencySession:
                 request = self._protocol.receive_request()
                 if request is None:
                     break
-                done = request.execute(self._coordinator, self)
+                done = request.execute(self._lottery_central, self)
                 if done:  # FinalizationCommand retorna True
                     break
                 self._protocol.send_confirmation()
@@ -38,7 +39,7 @@ class AgencySession:
         if request is None:
             logging.error(f"action: send_winners_phase | result: fail | reason: client disconnected")
             return
-        request.execute(self._coordinator, self)
+        request.execute(self._lottery_central, self)
     
     def receive_request(self) -> Command:
         """Receives a request from protocol."""
