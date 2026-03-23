@@ -37,6 +37,8 @@ class Server:
         if self._running:
             for session in self._agency_sessions:
                 session.receive_winners_request()
+        
+        self.__cleanup()
 
     def __accept_new_connection(self):
         """
@@ -64,6 +66,14 @@ class Server:
         """
         self._agency_sessions = list(filter(lambda session: not session.close_if_stoped(), self._agency_sessions))
         
+    def __cleanup(self):
+        """
+        Cleanup the server
+        """
+        for session in self._agency_sessions:
+            session.stop()
+        self._agency_sessions = []
+
     def graceful_shutdown(self, _signum, _frame):
         """
         Gracefully shutdown the server
@@ -74,9 +84,8 @@ class Server:
         """
         logging.info('action: graceful_shutdown | result: in_progress')
         self._running = False
+        self.__cleanup()
         close_socket(self._server_socket, "server")
-        for session in self._agency_sessions:
-            session.stop()
         logging.info('action: graceful_shutdown | result: success')
 
 
