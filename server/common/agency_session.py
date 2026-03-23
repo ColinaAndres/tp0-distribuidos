@@ -44,20 +44,6 @@ class AgencySession:
     def send_winners(self, winners):
         """Sends the winners to the protocol."""
         self._protocol.send_winners(winners)
-    
-    def receive_request(self) -> Command:
-        """Receives a request from protocol."""
-        return self._protocol.receive_request()
-    
-
-    
-    def send_error(self):
-        """Sends an error message to the protocol."""
-        self._protocol.send_error()
-
-    def send_confirmation(self):
-        """Sends a confirmation message to the protocol."""
-        self._protocol.send_confirmation()
 
     def stop(self):
         """Closes the protocol connection."""
