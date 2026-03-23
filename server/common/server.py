@@ -26,8 +26,7 @@ class Server:
         """
         self._running = True
         try:
-            while self._running:
-                self.__work()
+            self.__work()
         except Exception as e:
             logging.error(f'action: server_run | result: fail | error: {e}')
         finally:
