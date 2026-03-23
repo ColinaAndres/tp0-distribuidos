@@ -32,6 +32,7 @@ class Server:
                 session = AgencySession(BetProtocol(client_sock), self._lottery_central)
                 self._agency_sessions.append(session)
                 session.receive_bets()
+                self.__remove_stopped_sessions()
 
         if self._running:
             for session in self._agency_sessions:
@@ -55,6 +56,13 @@ class Server:
         except OSError as e:
             logging.error(f'action: accept_connections | result: fail | error: {e}')
             return None
+        
+    def __remove_stopped_sessions(self):
+        """
+        Remove stopped sessions
+        Function iterates over the list of agency sessions and removes those that are stopped
+        """
+        self._agency_sessions = list(filter(lambda session: not session.close_if_stoped(), self._agency_sessions))
         
     def graceful_shutdown(self, _signum, _frame):
         """
