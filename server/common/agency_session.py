@@ -1,9 +1,5 @@
-
 import logging
-
-from common.command import Command
 from common.bet_protocol import BatchProcessingError
-
 
 class AgencySession:
     """

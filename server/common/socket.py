@@ -24,7 +24,10 @@ class Socket:
         """
         sends all the data to the socket, ensuring no short writes
         """
-        self._skt.sendall(data)
+        try:
+            self._skt.sendall(data)
+        except OSError:
+            raise ConnectionError("Failed to send all data")
 
     def close(self):
         """
