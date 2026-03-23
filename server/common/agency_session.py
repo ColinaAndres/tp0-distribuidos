@@ -24,23 +24,40 @@ class AgencySession:
                     break
                 self._protocol.send_confirmation()
         except BatchProcessingError as e:
-            self._protocol.send_error()
-            logging.error(f"action: apuesta_recibida | result: fail | cantidad: {e.batch_count}")
+            self.__batch_processing_error_handler(self, e)
+        except ConnectionError:
+            logging.error(f"action: apuesta_recibida | result: fail | reason: client disconnected")
 
     def receive_winners_request(self):
         """
         Waits for client to request winners.
         """
-        request = self._protocol.receive_request()
-        if request is None:
+        try:
+            request = self._protocol.receive_request()
+            if request is None:
+                logging.error(f"action: send_winners_phase | result: fail | reason: client disconnected")
+                return
+            request.execute(self._lottery_central, self)
+        except ConnectionError:
             logging.error(f"action: send_winners_phase | result: fail | reason: client disconnected")
-            return
-        request.execute(self._lottery_central, self)
 
     def send_winners(self, winners):
         """Sends the winners to the protocol."""
-        self._protocol.send_winners(winners)
+        try:
+            self._protocol.send_winners(winners)
+        except ConnectionError:
+            logging.error(f"action: send_winners | result: fail | reason: client disconnected")
 
     def stop(self):
         """Closes the protocol connection."""
         self._protocol.close()
+
+    def __batch_processing_error_handler(self, error):
+        """
+        Handles BatchProcessingError by logging the error and closing the protocol connection.
+        """
+        try:
+            self._protocol.send_error()
+            logging.error(f"action: apuesta_recibida | result: fail | cantidad: {error.batch_count}")
+        except ConnectionError:
+            logging.error(f"action: apuesta_recibida | result: fail | reason: client disconnected")
