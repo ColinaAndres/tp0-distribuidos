@@ -64,16 +64,24 @@ class Server:
     def __remove_stopped_sessions(self):
         """
         Remove stopped sessions
-        Function iterates over the list of agency sessions and removes those that are stopped
+        It iterates over the list of agency sessions and removes and join
+        those that are stopped
         """
-        self._agency_sessions = list(filter(lambda session: not session.close_if_stoped(), self._agency_sessions))
-        
+        active = []
+        for session in self._agency_sessions:
+            if session.close_if_stoped():
+                session.join()
+            else:
+                active.append(session)
+        self._agency_sessions = active
+
     def __cleanup(self):
         """
         Cleanup the server
         """
         for session in self._agency_sessions:
             session.stop()
+            session.join()
         self._agency_sessions = []
 
     def graceful_shutdown(self, _signum, _frame):
