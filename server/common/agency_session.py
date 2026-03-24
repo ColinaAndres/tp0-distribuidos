@@ -1,11 +1,13 @@
 import logging
+import threading
 from common.bet_protocol import BatchProcessingError
 
-class AgencySession:
+class AgencySession(threading.Thread):
     """
     Class that represents a session with an agency
     """
     def __init__(self, protocol, lottery_central, agency_id=None):
+        super().__init__()
         self.agency_id = agency_id
         self._protocol = protocol
         self._lottery_central = lottery_central

@@ -39,8 +39,8 @@ class Server:
             if client_sock:
                 session = AgencySession(BetProtocol(client_sock), self._lottery_central)
                 self._agency_sessions.append(session)
-                threading.Thread(target=session.run).start()
-                self.__remove_stopped_sessions()
+                session.start()
+            self.__remove_stopped_sessions()
 
     def __accept_new_connection(self):
         """
