@@ -15,19 +15,22 @@ class AgencySession:
         """
         Receives bets from the client until a finalization command is received.
         """
-        try:
-            while self._running:
-                request = self._protocol.receive_request()
-                if request is None:
-                    break
-                done = request.execute(self._lottery_central, self)
-                if done:  # FinalizationCommand retorna True
-                    break
-                self._protocol.send_confirmation()
-        except BatchProcessingError as e:
-            self.__batch_processing_error_handler(self, e)
-        except ConnectionError:
-            self.__connection_error_handler()
+        while self._running:
+            try:
+                while self._running:
+                    request = self._protocol.receive_request()
+                    if request is None:
+                        break
+                    done = request.execute(self._lottery_central, self)
+                    if done:  # FinalizationCommand retorna True
+                        break
+                    self._protocol.send_confirmation()
+            except BatchProcessingError as e:
+                self.__batch_processing_error_handler(self, e)
+            except ConnectionError:
+                self.__connection_error_handler()
+                break
+        self._running = False
 
     def receive_winners_request(self):
         """
