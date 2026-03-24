@@ -70,7 +70,9 @@ class Server:
         active = []
         for session in self._agency_sessions:
             if session.close_if_stoped():
+                logging.info(f'action: stopping_session | result: in_progress | agency_id: {session.agency_id}')
                 session.join()
+                logging.info(f'action: stopping_session | result: success | agency_id: {session.agency_id}')
             else:
                 active.append(session)
         self._agency_sessions = active
@@ -80,8 +82,10 @@ class Server:
         Cleanup the server
         """
         for session in self._agency_sessions:
+            logging.info(f'action: stopping_session | result: in_progress | agency_id: {session.agency_id}')
             session.stop()
             session.join()
+            logging.info(f'action: stopping_session | result: success | agency_id: {session.agency_id}')
         self._agency_sessions = []
 
     def graceful_shutdown(self, _signum, _frame):
