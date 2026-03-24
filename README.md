@@ -325,3 +325,80 @@ Aclaraciones:
   - Dada la naturaleza secuencial del ejercicio y que se tiene que anunciar a los clientes sus ganadores, al aceptar las conexiones estas se guardan en el servidor de forma tal que puedan ser iteradas para volver a atenderlas en la fase de envíos.
   - Si algún cliente llegara a desconectarse mientras se envían sus batches, se lo elimina de la lista y se liberan sus recursos; esto será útil cuando se trabajen con hilos.
   - Al ser una solución secuencial, no hay problema en el acceso a los recursos compartidos.
+
+### Ejercicio 8
+ 
+- Partiendo de la solución del ejercicio anterior, se busca paralelizar el procesamiento de mensajes y la aceptación de nuevas conexiones. Nota: ya que el servidor está hecho en Python, nunca se tiene paralelismo real por el GIL, el cual asegura que solo se ejecute un hilo a la vez; no obstante, el GIL es liberado cuando un hilo se encuentra en una tarea de I/O, como lo puede ser la comunicación por red o lectura. Entonces, para nuestro caso, que tiene las dos tareas, nos termina siendo útil.
+
+- En total se maneja `N+1` hilos, siendo `N` la cantidad de agencias a conectarse con el servidor y se le suma `1`, representando el hilo del servidor.
+
+- El hilo del servidor se encarga de aceptar nuevas conexiones, instancia el objeto `AgencySession` (el cual hereda de `Thread` en este ejercicio), lo guarda en una lista y lo inicia con el método `start()`.
+
+- Posteriormente, se encarga de ir limpiando las sesiones que se hayan detenido, cerrándolas y *joineándolas*.
+
+```python
+  def __work(self):
+    while self._running:
+        client_sock = self.__accept_new_connection()
+        if client_sock:
+            session = AgencySession(BetProtocol(client_sock), self._lottery_central)
+            self._agency_sessions.append(session)
+            session.start()
+        self.__remove_stopped_sessions()
+        
+  def __remove_stopped_sessions(self):
+    active = []
+    for session in self._agency_sessions:
+        if session.close_if_stoped():
+            session.join()
+        else:
+            active.append(session)
+    self._agency_sessions = active
+```
+
+- Al momento de recibir `SIGTERM`, el `graceful_shutdown` se encarga de detener y *joinear* las sesiones:
+
+```python
+
+  def __cleanup(self):
+      for session in self._agency_sessions:
+          session.stop()
+          session.join()
+      self._agency_sessions = []
+
+  def graceful_shutdown(self, _signum, _frame):   
+      self._running = False
+      self.__cleanup()
+      close_socket(self._server_socket, "server")
+```
+
+- Como se dijo antes, `AgencySession` hereda de la clase `Thread`, por lo que al momento de invocar su método `start()`, internamente se llama al método `run()`, en el cual cada sesión usa su propio protocolo para obtener las requests asociadas a su agencia conectada y las va ejecutando.
+
+- Al momento de resolver la petición de procesamiento de batch, dentro de la clase `LotteryCentral` se usa un `threading.Lock()` para que no existan race conditions al intentar almacenar las apuestas recibidas. Nota: El bloque with libera el lock una vez se termina:
+
+```python
+  def __init__(self, total_agencies):
+    ...
+    self._lock = threading.Lock()
+
+  def process_bets(self, bets):
+    with self._lock:
+        store_bets(bets)
+    logging.info(f"action: apuesta_recibida | result: success | cantidad: {len(bets)}")
+```
+- Al momento de recibir la notificación de que la agencia envió todas las apuestas, dentro de la clase `LotteryCentral` se usa un `threading.Barrier()`. Esta barrera, inicializada al instanciar el objeto, se configura para que ejecute la función `__run_lottery()` una vez que todas las agencias hayan llegado a la instrucción `wait()`, ubicada en el método `register_agency_done()`. De esta manera, cuando llegue el último de los hilos, uno solo de estos ejecutará la función configurada en la barrera y posteriormente se liberará a todos para que sigan su actividad. De forma intuitiva, la barrera nos resuelve el problema del ejercicio de no resolver pedidos de listado de ganadores sin que se haya realizado el sorteo.
+
+```python
+  def __init__(self, total_agencies):
+    ...
+    self._barrier = threading.Barrier(total_agencies, action=self._run_lottery)
+
+  def register_agency_done(self):
+    logging.info(f"action: finalizacion_recepcion_apuestas | result: success")
+    self._barrier.wait()
+
+  def _run_lottery(self):
+      logging.info(f"action: sorteo | result: success")
+      self._winners = list(filter(has_won, load_bets()))
+```
+- Al momento de recibir un pedido por los ganadores de una agencia, no hace falta ningún método de sincronización, pues la lista donde se almacenaron los ganadores es de solo lectura y no puede ser modificada (solo es modificada al momento en que la barrera lo permite).
