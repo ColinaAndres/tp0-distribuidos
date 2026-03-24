@@ -18,18 +18,18 @@ class AgencySession(threading.Thread):
         Runs the session
         """
         self._running = True
-        try:
-            while self._running:
+        while self._running:
+            try:
                 request = self._protocol.receive_request()
                 if request is None:
                     break
                 request.execute(self._lottery_central, self)
-        except BatchProcessingError as e:
-            self.__batch_processing_error_handler(self, e)
-        except ConnectionError:
-            self.__connection_error_handler()
-        finally:
-            self._running = False
+            except BatchProcessingError as e:
+                self.__batch_processing_error_handler(e)
+            except ConnectionError:
+                self.__connection_error_handler()
+                break
+        self._running = False
 
     def send_winners(self, winners):
         """Sends the winners to the protocol."""
