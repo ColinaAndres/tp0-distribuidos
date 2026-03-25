@@ -14,6 +14,7 @@ type ClientConfig struct {
 	ServerAddress string
 	LoopAmount    int
 	LoopPeriod    time.Duration
+	BetConfig     BetConfig
 }
 
 // Client Entity that encapsulates how
@@ -49,7 +50,7 @@ func (c *Client) GracefulShutdown() {
 // StartClientLoop Send messages to the client until some time threshold is met
 func (c *Client) StartClient() {
 	c.running = true
-	bet := NewBetFromEnv()
+	bet := NewBet(c.config.BetConfig)
 	betProtocol, err := NewBetProtocol(c.config.ServerAddress)
 	if err != nil {
 		log.Criticalf(

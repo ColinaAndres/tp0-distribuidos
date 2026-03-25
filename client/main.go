@@ -105,11 +105,21 @@ func main() {
 	// Print program config with debugging purposes
 	PrintConfig(v)
 
+	betConfig := common.BetConfig{
+		Agency:   v.GetString("CLI_ID"),
+		Name:     v.GetString("NOMBRE"),
+		LastName: v.GetString("APELLIDO"),
+		Document: v.GetString("DOCUMENTO"),
+		Birth:    v.GetString("NACIMIENTO"),
+		Number:   v.GetString("NUMERO"),
+	}
+
 	clientConfig := common.ClientConfig{
 		ServerAddress: v.GetString("server.address"),
 		ID:            v.GetString("id"),
 		LoopAmount:    v.GetInt("loop.amount"),
 		LoopPeriod:    v.GetDuration("loop.period"),
+		BetConfig:     betConfig,
 	}
 
 	sigTermChannel := make(chan os.Signal, 1)

@@ -1,8 +1,14 @@
 package common
 
-import (
-	"os"
-)
+// BetConfig represents the configuration of a bet placed by a client
+type BetConfig struct {
+	Agency   string
+	Name     string
+	LastName string
+	Document string
+	Birth    string
+	Number   string
+}
 
 // Bet represents a bet placed by a client
 type Bet struct {
@@ -14,15 +20,14 @@ type Bet struct {
 	number   string
 }
 
-// NewBetFromEnv creates a new Bet instance by reading
-// the necessary fields from environment variables.
-func NewBetFromEnv() *Bet {
+// NewBet Initializes a new bet receiving the configuration as a parameter
+func NewBet(config BetConfig) *Bet {
 	return &Bet{
-		agency:   os.Getenv("CLI_ID"),
-		name:     os.Getenv("NOMBRE"),
-		lastName: os.Getenv("APELLIDO"),
-		document: os.Getenv("DOCUMENTO"),
-		birth:    os.Getenv("NACIMIENTO"),
-		number:   os.Getenv("NUMERO"),
+		agency:   config.Agency,
+		name:     config.Name,
+		lastName: config.LastName,
+		document: config.Document,
+		birth:    config.Birth,
+		number:   config.Number,
 	}
 }
