@@ -402,3 +402,7 @@ Aclaraciones:
       self._winners = list(filter(has_won, load_bets()))
 ```
 - Al momento de recibir un pedido por los ganadores de una agencia, no hace falta ningún método de sincronización, pues la lista donde se almacenaron los ganadores es de solo lectura y no puede ser modificada (solo es modificada al momento en que la barrera lo permite).
+
+### Resultados de Tests de la catedra
+
+![Resultado Test Catedra](assets/ok_tests.png)
