@@ -213,7 +213,7 @@ La manera de ejecutar el script es:
 
 ### Ejercicio 2
 
-Se actualiza el subscript `generator.go` para que a cada servicio del docker-compose se le agrege el campo `volumes` el cual permite inyectar como volumen los archivos de configuracion tanto del cliente como del servidor de forma independiente a la imagen de docker, evitando tener que actualizar la imagen al hacer cambios en los archivos de configuracion. Ademas se eliminan variables de entorno del campo `environment` que pisan a los archivos de configuracion (en particular las varibales sobre el nivel de Log)
+Se actualiza el subscript `generator.go` para que a cada servicio del docker-compose se le agrege el campo `volumes` el cual permite inyectar como volumen los archivos de configuracion tanto del cliente como del servidor de forma independiente a la imagen de docker, evitando tener que actualizar la imagen al hacer cambios en los archivos de configuracion. Ademas se eliminan variables de entorno del campo `environment` que pisan a los archivos de configuracion (en particular las variables sobre el nivel de Log)
 
 ### Ejercicio 3
 
@@ -223,6 +223,13 @@ Para verificar que el servidor responde sin instalar nada en la maquina host, se
 
 ```bash
 SERVER_RESPONSE=$(docker run --rm --network tp0_testing_net busybox /bin/sh -c "echo '$TEST_MESSAGE' | nc server 12345")
+```
+
+Para probar el script levantar primero los contenedores y posteriormente ejecutar el script
+
+```bash
+make docker-compose-up
+./validar-echo-server.sh
 ```
 
 ### Ejercicio 4
@@ -279,7 +286,7 @@ Flujo de la comunicación:
   - Servidor:
 
     - Dentro de un loop, recibe un batch, lo procesa, envía la confirmación con el byte `1` al cliente y repite la acción hasta que detecte que el cliente cierre la conexión y, por ende, no haya nada más para procesar.
-    - Si si detecta un error en los batches al recibirlos, el servidor le envia al cliente un byte `0` para indicarle que hubo un error y no se procesa el batch.
+    - Si se detecta un error en los batches al recibirlos, el servidor le envia al cliente un byte `0` para indicarle que hubo un error y no se procesa el batch.
 
 Una aclaración sobre no excederse de los 8 kB: al construir un batch, el `BetBatcher`, consulta al protocolo sobre el tamaño que se obtendria si se agrega una nueva APuesta al batch. Para ello el protocolo recibe el tamaño actual del batch más la apuesta a incluir y se analizan los siguientes casos:
 
