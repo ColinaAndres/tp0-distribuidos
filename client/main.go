@@ -39,6 +39,11 @@ func InitConfig() (*viper.Viper, error) {
 	v.BindEnv("loop", "period")
 	v.BindEnv("loop", "amount")
 	v.BindEnv("log", "level")
+	v.BindEnv("nombre", "NOMBRE")
+	v.BindEnv("apellido", "APELLIDO")
+	v.BindEnv("documento", "DOCUMENTO")
+	v.BindEnv("nacimiento", "NACIMIENTO")
+	v.BindEnv("numero", "NUMERO")
 
 	// Try to read configuration from config file. If config file
 	// does not exists then ReadInConfig will fail but configuration
@@ -106,12 +111,12 @@ func main() {
 	PrintConfig(v)
 
 	betConfig := common.BetConfig{
-		Agency:   v.GetString("CLI_ID"),
-		Name:     v.GetString("NOMBRE"),
-		LastName: v.GetString("APELLIDO"),
-		Document: v.GetString("DOCUMENTO"),
-		Birth:    v.GetString("NACIMIENTO"),
-		Number:   v.GetString("NUMERO"),
+		Agency:   v.GetString("id"),
+		Name:     v.GetString("nombre"),
+		LastName: v.GetString("apellido"),
+		Document: v.GetString("documento"),
+		Birth:    v.GetString("nacimiento"),
+		Number:   v.GetString("numero"),
 	}
 
 	clientConfig := common.ClientConfig{
